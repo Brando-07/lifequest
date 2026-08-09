@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeQuest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold:#D4A017;--gold-light:#E8B830;--gold-bright:#F5CC50;--gold-dim:#8A6800;
+    --green:#4DBF7F;--green-dim:#1E5C3A;--green-bg:#0E2218;
+    --orange:#E8903A;--orange-dim:#7A4010;--orange-bg:#2A1A08;
+    --red:#E05050;--red-dim:#7A1818;--red-bg:#2A0E0E;
+    --purple:#9B72CF;--purple-dim:#4A2880;--purple-bg:#1E0E3A;
+    --surface:#1A1812;--surface2:#231F16;--surface3:#2D2820;--surface4:#3A3428;
+    --border:rgba(200,170,80,0.12);--border2:rgba(200,170,80,0.28);
+    --ink:#EDE0C4;--ink-soft:#A89870;--ink-hint:#6A5E48;
+    --rad:8px;--rad-lg:14px;--shadow-card:0 2px 16px rgba(0,0,0,0.4);
+  }
+  html{-webkit-text-size-adjust:100%;}
+  body{font-family:'Crimson Pro',Georgia,'Times New Roman',serif;background:var(--surface);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;}
+  .page{max-width:760px;margin:0 auto;padding:2rem 1.25rem 5rem;}
+
+  /* Header */
+  .header{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;margin-bottom:1.75rem;gap:1rem;}
+  .brand-title{font-family:'Cinzel',Georgia,serif;font-size:28px;font-weight:700;color:var(--gold);letter-spacing:0.04em;line-height:1;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:10px;}
+  .brand-spade{font-size:26px;color:var(--gold);}
+  .hud{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:12px;flex-shrink:0;}
+  .hud-info{text-align:right;}
+  .hud-level{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:0.05em;}
+  .xp-bar-track{width:100px;height:5px;background:var(--surface4);border-radius:99px;margin-top:5px;overflow:hidden;}
+  .xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));border-radius:99px;-webkit-transition:width 0.6s ease;transition:width 0.6s ease;width:0%;}
+  .xp-text{font-size:11px;color:var(--ink-hint);margin-top:3px;}
+  .avatar{width:46px;height:46px;border-radius:50%;background:var(--surface3);border:2px solid var(--gold-dim);display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;font-size:18px;font-weight:600;color:var(--gold);flex-shrink:0;}
+
+  /* Backup bar */
+  .backup-bar{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;margin-bottom:1.25rem;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad);flex-wrap:wrap;}
+  .backup-label{font-family:'Cinzel',Georgia,serif;font-size:10px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.08em;flex:1;min-width:80px;}
+  .backup-btn{font-family:'Cinzel',Georgia,serif;font-size:11px;font-weight:600;padding:5px 14px;border-radius:var(--rad);cursor:pointer;-webkit-appearance:none;letter-spacing:0.04em;border:1px solid var(--border2);background:var(--surface3);color:var(--ink-soft);-webkit-transition:background 0.15s;transition:background 0.15s;}
+  .backup-btn:hover{background:var(--surface4);}
+  .backup-btn.export{color:var(--gold);border-color:var(--gold-dim);}
+  #import-file{display:none;}
+
+  /* Top stats */
+  .stats{display:-webkit-box;display:flex;gap:10px;margin-bottom:1.75rem;}
+  .stat-card{-webkit-box-flex:1;flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow-card);}
+  .stat-val{font-family:'Cinzel',Georgia,serif;font-size:24px;font-weight:600;color:var(--gold);}
+  .stat-label{font-size:11px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;}
+
+  /* Tabs */
+  .tabs{display:-webkit-box;display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:400;color:var(--ink-hint);background:none;border:none;border-bottom:2px solid transparent;padding:8px 14px 12px;margin-bottom:-1px;cursor:pointer;letter-spacing:0.04em;-webkit-appearance:none;-webkit-transition:color 0.2s;transition:color 0.2s;white-space:nowrap;flex-shrink:0;}
+  .tab-btn:hover{color:var(--gold);}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .section{display:none;}
+  .section.active{display:block;}
+
+  /* Toolbar */
+  .toolbar{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;margin-bottom:0.75rem;gap:10px;flex-wrap:wrap;}
+  .toolbar-right{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:10px;flex-wrap:wrap;}
+  .add-btn{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;gap:6px;font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:var(--gold);border:1px solid var(--gold-dim);background:var(--surface2);border-radius:var(--rad);padding:8px 18px;cursor:pointer;letter-spacing:0.05em;-webkit-appearance:none;-webkit-transition:background 0.15s;transition:background 0.15s;}
+  .add-btn:hover{background:var(--surface3);}
+  .sort-wrap{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;}
+  .sort-label{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);letter-spacing:0.06em;text-transform:uppercase;}
+  .sort-select{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-soft);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rad);padding:6px 28px 6px 10px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%236A5E48' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+  .sort-select:focus{outline:none;border-color:var(--gold-dim);}
+
+  /* Filter row */
+  .filter-row{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:14px;margin-bottom:1.1rem;flex-wrap:wrap;}
+  .chk-label{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);cursor:pointer;letter-spacing:0.04em;user-select:none;-webkit-user-select:none;}
+  .chk-label input[type="checkbox"]{width:14px;height:14px;accent-color:var(--gold);cursor:pointer;}
+
+  /* Form panel */
+  .form-panel{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rad-lg);padding:1.25rem;margin-bottom:1.25rem;box-shadow:var(--shadow-card);display:none;}
+  .form-panel.open{display:block;}
+  .form-panel-title{font-family:'Cinzel',Georgia,serif;font-size:13px;color:var(--gold);letter-spacing:0.06em;margin-bottom:14px;}
+  .form-row{display:-webkit-box;display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .form-field-label{font-size:11px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;display:block;}
+  .form-panel input[type="text"],.form-panel input[type="number"],.form-panel input[type="date"],.form-panel select,.form-panel textarea{-webkit-box-flex:1;flex:1;min-width:100px;font-family:'Crimson Pro',Georgia,serif;font-size:15px;padding:9px 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;appearance:none;outline:none;-webkit-transition:border-color 0.15s;transition:border-color 0.15s;}
+  .form-panel input[type="date"]{color-scheme:dark;}
+  .form-panel select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236A5E48' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--surface3);padding-right:28px;}
+  .form-panel input:focus,.form-panel select:focus,.form-panel textarea:focus{border-color:var(--gold-dim);background:var(--surface4);}
+  .form-panel textarea{resize:vertical;min-height:65px;width:100%;}
+  .money-fields{display:none;}
+  .money-fields.visible{display:block;}
+  .money-row{display:-webkit-box;display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .money-row label{font-size:12px;color:var(--ink-hint);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;}
+  .money-field-group{-webkit-box-flex:1;flex:1;min-width:120px;}
+  .form-actions{display:-webkit-box;display:flex;gap:8px;-webkit-box-pack:end;justify-content:flex-end;margin-top:12px;}
+  .btn-save{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:#1A1812;background:var(--gold);border:none;border-radius:var(--rad);padding:9px 20px;cursor:pointer;letter-spacing:0.04em;-webkit-appearance:none;-webkit-transition:opacity 0.15s;transition:opacity 0.15s;}
+  .btn-save:hover{opacity:0.85;}
+  .btn-cancel{font-family:'Cinzel',Georgia,serif;font-size:12px;color:var(--ink-soft);background:none;border:1px solid var(--border2);border-radius:var(--rad);padding:9px 16px;cursor:pointer;-webkit-appearance:none;}
+
+  /* Empty */
+  .empty{text-align:center;padding:3rem 0;color:var(--ink-hint);font-style:italic;font-size:16px;}
+  .empty-icon{font-size:36px;display:block;margin-bottom:10px;opacity:0.4;}
+
+  /* Badges */
+  .countdown{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;gap:4px;font-family:'Cinzel',Georgia,serif;font-size:10px;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:0.04em;}
+  .countdown.expired{background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);}
+  .countdown.urgent{background:var(--red-bg);color:var(--red);border:1px solid var(--red-dim);}
+  .countdown.soon{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-dim);}
+  .countdown.later{background:var(--surface3);color:var(--ink-soft);border:1px solid var(--border2);}
+  .lock-badge{display:-webkit-inline-box;display:inline-flex;-webkit-box-align:center;align-items:center;gap:4px;font-family:'Cinzel',Georgia,serif;font-size:10px;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:0.04em;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-dim);}
+
+  /* Goal cards */
+  .goal-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:1rem 1.25rem;margin-bottom:10px;box-shadow:var(--shadow-card);-webkit-transition:border-color 0.2s;transition:border-color 0.2s;}
+  .goal-card:hover{border-color:var(--border2);}
+  .goal-card.done{opacity:0.45;}
+  .goal-card.done .goal-title{text-decoration:line-through;}
+  .goal-card.money-card{border-left:3px solid var(--green-dim);}
+  .goal-card.money-card.done{border-left-color:var(--green);}
+  .goal-card.expiring-soon{border-left:3px solid var(--orange-dim);}
+  .goal-card.expiring-urgent{border-left:3px solid var(--red-dim);}
+  .goal-card.locked-card{border-left:3px solid var(--purple-dim);opacity:0.7;}
+  .goal-card.locked-card .goal-title{color:var(--ink-soft);}
+  .group-header{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:var(--gold-dim);letter-spacing:0.07em;text-transform:uppercase;padding:10px 4px 6px;border-bottom:1px solid var(--border);margin-bottom:8px;margin-top:4px;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;}
+  .goal-row{display:-webkit-box;display:flex;-webkit-box-align:flex-start;align-items:flex-start;gap:12px;}
+  .check-btn{width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid var(--border2);background:none;cursor:pointer;-webkit-appearance:none;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;margin-top:2px;-webkit-transition:background 0.2s,border-color 0.2s;transition:background 0.2s,border-color 0.2s;}
+  .check-btn .checkmark{display:none;font-size:13px;color:#1A1812;line-height:1;}
+  .goal-card.done .check-btn{background:var(--gold);border-color:var(--gold);}
+  .goal-card.done .check-btn .checkmark{display:block;}
+  .goal-body{-webkit-box-flex:1;flex:1;min-width:0;}
+  .goal-title{font-size:16px;font-weight:500;color:var(--ink);line-height:1.3;}
+  .goal-desc{font-size:13px;color:var(--ink-soft);margin-top:3px;font-style:italic;line-height:1.4;}
+  .goal-meta{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;margin-top:9px;flex-wrap:wrap;}
+  .tag{font-size:10px;padding:3px 9px;border-radius:99px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+  .tag-health{background:#1A2E1A;color:#6DBF6D;border:1px solid #2D4D2D;}
+  .tag-career{background:#182030;color:#6AADDF;border:1px solid #243550;}
+  .tag-personal{background:#221830;color:#B08AE0;border:1px solid #3A2858;}
+  .tag-finance{background:#2A2010;color:#D4A017;border:1px solid #4A3810;}
+  .tag-creative{background:#2A1820;color:#E07090;border:1px solid #4A2838;}
+  .tag-other{background:var(--surface3);color:var(--ink-soft);border:1px solid var(--border);}
+  .tag-money{background:#0E2218;color:#4DBF7F;border:1px solid #1E5C3A;}
+  .xp-badge{font-family:'Cinzel',Georgia,serif;font-size:10px;font-weight:600;color:var(--gold);background:#2A2010;border:1px solid var(--gold-dim);border-radius:99px;padding:2px 9px;}
+  .money-badge{font-family:'Cinzel',Georgia,serif;font-size:10px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-dim);border-radius:99px;padding:2px 9px;}
+  .proj-badge{font-size:11px;color:var(--ink-hint);}
+  .diff-stars{color:var(--gold-dim);font-size:11px;letter-spacing:1px;}
+  .goal-money-bar-wrap{margin-top:10px;}
+  .goal-money-labels{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;font-size:11px;color:var(--ink-hint);margin-bottom:4px;}
+  .goal-money-track{height:4px;background:var(--surface4);border-radius:99px;overflow:hidden;}
+  .goal-money-fill{height:100%;background:linear-gradient(90deg,var(--green-dim),var(--green));border-radius:99px;-webkit-transition:width 0.5s ease;transition:width 0.5s ease;}
+  .goal-actions{display:-webkit-box;display:flex;gap:2px;flex-shrink:0;margin-left:auto;}
+  .icon-btn{width:30px;height:30px;border:none;background:none;color:var(--ink-hint);cursor:pointer;border-radius:var(--rad);-webkit-appearance:none;font-size:15px;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;-webkit-transition:background 0.15s,color 0.15s;transition:background 0.15s,color 0.15s;line-height:1;}
+  .icon-btn:hover{background:var(--surface3);color:var(--ink);}
+  .icon-btn.del:hover{background:#2A1818;color:var(--red);}
+  .icon-btn.lock-active{color:var(--purple);}
+  .pay-row{margin-top:10px;display:-webkit-box;display:flex;gap:6px;-webkit-box-align:center;align-items:center;flex-wrap:wrap;}
+  .pay-input{font-family:'Crimson Pro',Georgia,serif;font-size:14px;padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);width:110px;-webkit-appearance:none;outline:none;}
+  .pay-input:focus{border-color:var(--green-dim);}
+  .pay-btn{font-family:'Cinzel',Georgia,serif;font-size:11px;font-weight:600;padding:6px 14px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);border-radius:var(--rad);cursor:pointer;-webkit-appearance:none;-webkit-transition:background 0.15s;transition:background 0.15s;letter-spacing:0.04em;}
+  .pay-btn:hover{background:#2A7A50;}
+
+  /* Money circle */
+  .money-circle-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-card);}
+  .money-circle-title{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1.25rem;}
+  .money-circle-body{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:2rem;flex-wrap:wrap;}
+  .circle-wrap{position:relative;width:140px;height:140px;flex-shrink:0;margin:0 auto;}
+  .circle-svg{width:140px;height:140px;-webkit-transform:rotate(-90deg);transform:rotate(-90deg);}
+  .circle-track{fill:none;stroke:var(--surface4);stroke-width:10;}
+  .circle-fill{fill:none;stroke:var(--green);stroke-width:10;stroke-linecap:round;-webkit-transition:stroke-dashoffset 0.7s ease;transition:stroke-dashoffset 0.7s ease;}
+  .circle-label{position:absolute;top:50%;left:50%;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+  .circle-paid{font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:700;color:var(--green);line-height:1;}
+  .circle-sep{font-size:11px;color:var(--ink-hint);margin:3px 0;}
+  .circle-total{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);}
+  .circle-pct{font-size:10px;color:var(--green);margin-top:4px;}
+  .money-details{-webkit-box-flex:1;flex:1;min-width:180px;}
+  .money-detail-row{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:center;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .money-detail-row:last-child{border-bottom:none;}
+  .money-detail-label{color:var(--ink-hint);}
+  .money-detail-val{font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:600;}
+  .money-detail-val.green{color:var(--green);}
+  .money-detail-val.gold{color:var(--gold);}
+  .money-detail-val.soft{color:var(--ink-soft);}
+
+  /* Project cards */
+  .project-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:1.25rem;margin-bottom:12px;box-shadow:var(--shadow-card);}
+  .project-card.expiring-soon{border-left:3px solid var(--orange-dim);}
+  .project-card.expiring-urgent{border-left:3px solid var(--red-dim);}
+  .project-card.locked-proj{border-left:3px solid var(--purple-dim);opacity:0.75;}
+  .project-head{display:-webkit-box;display:flex;-webkit-box-align:flex-start;align-items:flex-start;gap:12px;}
+  .project-emoji{width:40px;height:40px;min-width:40px;background:var(--surface3);border-radius:var(--rad);border:1px solid var(--border);display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;font-size:20px;}
+  .project-info{-webkit-box-flex:1;flex:1;min-width:0;}
+  .project-name{font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:600;color:var(--ink);}
+  .project-desc{font-size:13px;color:var(--ink-soft);font-style:italic;margin-top:2px;}
+  .project-meta{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .progress-wrap{margin-top:10px;}
+  .progress-labels{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;font-size:11px;color:var(--ink-hint);margin-bottom:5px;}
+  .progress-track{height:5px;background:var(--surface4);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));border-radius:99px;-webkit-transition:width 0.5s ease;transition:width 0.5s ease;}
+  .project-footer{margin-top:12px;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:12px;}
+  .toggle-goals-btn{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--gold-dim);background:none;border:none;cursor:pointer;padding:0;-webkit-appearance:none;letter-spacing:0.04em;}
+  .project-goals{border-top:1px solid var(--border);margin-top:12px;padding-top:10px;display:none;}
+  .project-goals.open{display:block;}
+  /* money row inside project */
+  .proj-money-row{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:center;align-items:center;margin-top:8px;padding:6px 10px;background:var(--green-bg);border:1px solid var(--green-dim);border-radius:var(--rad);}
+  .proj-money-label{font-size:12px;color:var(--green);font-family:'Cinzel',Georgia,serif;letter-spacing:0.04em;}
+  .proj-money-val{font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:700;color:var(--green);}
+
+  /* Full quest info inside project */
+  .pq-card{background:var(--surface3);border:1px solid var(--border);border-radius:var(--rad);padding:10px 14px;margin-bottom:8px;}
+  .pq-card:last-child{margin-bottom:0;}
+  .pq-card.done-pq{opacity:0.5;}
+  .pq-card.done-pq .pq-title{text-decoration:line-through;}
+  .pq-card.locked-pq{border-left:3px solid var(--purple-dim);opacity:0.65;}
+  .pq-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:6px;}
+  .pq-desc{font-size:12px;color:var(--ink-soft);font-style:italic;margin-bottom:6px;}
+  .pq-meta{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;flex-wrap:wrap;}
+
+  /* Stats tab */
+  .big-pct-wrap{text-align:center;padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem;}
+  .big-pct-number{font-family:'Cinzel',Georgia,serif;font-size:108px;font-weight:700;color:var(--gold);line-height:1;letter-spacing:-0.02em;}
+  .big-pct-symbol{font-family:'Cinzel',Georgia,serif;font-size:52px;font-weight:400;color:var(--gold-dim);vertical-align:super;}
+  .big-pct-label{font-family:'Cinzel',Georgia,serif;font-size:12px;color:var(--ink-hint);letter-spacing:0.16em;text-transform:uppercase;margin-top:10px;}
+  .big-pct-sub{font-size:15px;color:var(--ink-soft);font-style:italic;margin-top:6px;}
+  .stats-section-title{font-family:'Cinzel',Georgia,serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-hint);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .stats-grid{display:-webkit-box;display:flex;flex-wrap:wrap;gap:10px;margin-bottom:2rem;}
+  .stats-tile{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:16px 20px;min-width:130px;-webkit-box-flex:1;flex:1;box-shadow:var(--shadow-card);}
+  .stats-tile-val{font-family:'Cinzel',Georgia,serif;font-size:26px;font-weight:600;color:var(--gold);line-height:1;}
+  .stats-tile-val.c-green{color:var(--green);}
+  .stats-tile-val.c-amber{color:var(--gold);}
+  .stats-tile-val.c-red{color:#E07070;}
+  .stats-tile-label{font-size:10px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.08em;margin-top:5px;}
+  .stats-tile-sub{font-size:12px;color:var(--ink-soft);font-style:italic;margin-top:4px;}
+  .proj-stat-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:14px 18px;margin-bottom:10px;box-shadow:var(--shadow-card);}
+  .proj-stat-header{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;margin-bottom:10px;}
+  .proj-stat-name{font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:600;color:var(--ink);}
+  .proj-stat-pct{font-family:'Cinzel',Georgia,serif;font-size:22px;font-weight:700;}
+  .cat-stats-grid{display:-webkit-box;display:flex;flex-wrap:wrap;gap:8px;margin-bottom:2rem;}
+  .cat-tile{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad);padding:12px 16px;min-width:100px;-webkit-box-flex:1;flex:1;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:12px;}
+  .cat-tile-pct{font-family:'Cinzel',Georgia,serif;font-size:20px;font-weight:600;min-width:44px;}
+  .cat-tile-name{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-hint);}
+  .cat-tile-count{font-size:12px;color:var(--ink-soft);font-style:italic;margin-top:2px;}
+
+  /* Modals */
+  .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:200;display:none;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;padding:1rem;}
+  .modal-overlay.open{display:-webkit-box;display:flex;}
+  .modal{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rad-lg);padding:1.5rem;width:100%;max-width:500px;box-shadow:0 8px 40px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .modal-title{font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:600;color:var(--gold);letter-spacing:0.06em;margin-bottom:16px;}
+  .modal input[type="text"],.modal input[type="number"],.modal input[type="date"],.modal select,.modal textarea{width:100%;font-family:'Crimson Pro',Georgia,serif;font-size:15px;padding:9px 12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;appearance:none;outline:none;margin-bottom:10px;}
+  .modal input[type="date"]{color-scheme:dark;}
+  .modal select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236A5E48' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--surface3);padding-right:28px;}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--gold-dim);}
+  .modal textarea{resize:vertical;min-height:65px;}
+  .modal-row{display:-webkit-box;display:flex;gap:8px;}
+  .modal-row>*{-webkit-box-flex:1;flex:1;}
+  .modal-money-fields{display:none;}
+  .modal-money-fields.visible{display:block;}
+  .modal-label{font-size:12px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;display:block;}
+  .modal-actions{display:-webkit-box;display:flex;gap:8px;-webkit-box-pack:end;justify-content:flex-end;margin-top:4px;}
+  .proj-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:200;display:none;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;padding:1rem;}
+  .proj-modal-overlay.open{display:-webkit-box;display:flex;}
+
+  /* Lock modal */
+  .lock-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:300;display:none;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;padding:1rem;}
+  .lock-modal-overlay.open{display:-webkit-box;display:flex;}
+  .lock-modal{background:var(--surface2);border:1px solid var(--purple-dim);border-radius:var(--rad-lg);padding:1.5rem;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,0.7);}
+  .lock-modal-title{font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:600;color:var(--purple);letter-spacing:0.06em;margin-bottom:16px;}
+  .lock-option{display:-webkit-box;display:flex;-webkit-box-align:flex-start;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--border);border-radius:var(--rad);margin-bottom:10px;cursor:pointer;-webkit-transition:border-color 0.15s;transition:border-color 0.15s;}
+  .lock-option:hover{border-color:var(--purple-dim);}
+  .lock-option.selected{border-color:var(--purple);background:var(--purple-bg);}
+  .lock-option-radio{width:16px;height:16px;accent-color:var(--purple);margin-top:2px;flex-shrink:0;}
+  .lock-option-text{flex:1;}
+  .lock-option-title{font-family:'Cinzel',Georgia,serif;font-size:12px;color:var(--ink);letter-spacing:0.04em;}
+  .lock-option-sub{font-size:12px;color:var(--ink-hint);margin-top:3px;font-style:italic;}
+  .lock-sub-input{display:none;margin-top:8px;}
+  .lock-sub-input.visible{display:block;}
+  .lock-sub-input input{font-family:'Crimson Pro',Georgia,serif;font-size:14px;padding:7px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;outline:none;width:100%;}
+  .lock-sub-input input:focus{border-color:var(--purple-dim);}
+  .lock-sub-input input[type="date"]{color-scheme:dark;}
+  .lock-actions{display:-webkit-box;display:flex;gap:8px;-webkit-box-pack:end;justify-content:flex-end;margin-top:14px;}
+  .btn-lock{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:#fff;background:var(--purple-dim);border:1px solid var(--purple-dim);border-radius:var(--rad);padding:9px 20px;cursor:pointer;-webkit-appearance:none;letter-spacing:0.04em;-webkit-transition:opacity 0.15s;transition:opacity 0.15s;}
+  .btn-lock:hover{opacity:0.85;}
+
+  /* Toast */
+  .toast{position:fixed;bottom:28px;left:50%;-webkit-transform:translateX(-50%) translateY(80px);transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--gold-dim);border-radius:var(--rad-lg);padding:11px 24px;font-family:'Cinzel',Georgia,serif;font-size:13px;color:var(--gold);box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;-webkit-transition:-webkit-transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;transition:transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;opacity:0;white-space:nowrap;pointer-events:none;}
+  .toast.show{-webkit-transform:translateX(-50%) translateY(0);transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand-title"><span class="brand-spade">♠</span> LifeQuest</div>
+    <div class="hud">
+      <div class="hud-info">
+        <div class="hud-level" id="levelLabel">Novice · Lv 1</div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBar"></div></div>
+        <div class="xp-text" id="xpLabel">0 / 100 XP</div>
+      </div>
+      <div class="avatar" id="avatarEl">♠</div>
+    </div>
+  </div>
+
+  <!-- Backup bar -->
+  <div class="backup-bar">
+    <span class="backup-label">💾 Data backup</span>
+    <button class="backup-btn export" onclick="exportData()">⬇ Export JSON</button>
+    <button class="backup-btn" onclick="document.getElementById('import-file').click()">⬆ Import JSON</button>
+    <input type="file" id="import-file" accept=".json" onchange="importData(event)" />
+    <span id="backup-status" style="font-size:11px;color:var(--ink-hint);font-style:italic;"></span>
+  </div>
+
+  <!-- Top stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Quests</div></div>
+    <div class="stat-card"><div class="stat-val" id="statDone">0</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card"><div class="stat-val" id="statXP">0</div><div class="stat-label">Total XP</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('goals',this)">All Quests</button>
+    <button class="tab-btn" onclick="switchTab('normal',this)">Normal Quests</button>
+    <button class="tab-btn" onclick="switchTab('money',this)">Money Quests</button>
+    <button class="tab-btn" onclick="switchTab('projects',this)">Projects</button>
+    <button class="tab-btn" onclick="switchTab('stats',this)">Stats</button>
+  </div>
+
+  <!-- ═══ ALL QUESTS TAB ═══ -->
+  <div class="section active" id="tab-goals">
+    <div class="money-circle-section" id="money-circle-section" style="display:none;">
+      <div class="money-circle-title">💰 Money Quest Tracker</div>
+      <div class="money-circle-body">
+        <div class="circle-wrap">
+          <svg class="circle-svg" viewBox="0 0 140 140">
+            <circle class="circle-track" cx="70" cy="70" r="55"/>
+            <circle class="circle-fill" id="circFill" cx="70" cy="70" r="55" stroke-dasharray="345.6" stroke-dashoffset="345.6"/>
+          </svg>
+          <div class="circle-label">
+            <div class="circle-paid" id="circPaid">€0</div>
+            <div class="circle-sep">of</div>
+            <div class="circle-total" id="circTotal">€0</div>
+            <div class="circle-pct" id="circPct">0%</div>
+          </div>
+        </div>
+        <div class="money-details" id="money-details"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="add-btn" onclick="openAddGoal('all')">＋ New Quest</button>
+      <div class="toolbar-right">
+        <div class="sort-wrap">
+          <span class="sort-label">Sort</span>
+          <select class="sort-select" id="sort-select-all" onchange="renderGoals('all')">
+            <optgroup label="Date"><option value="date-new">Newest first</option><option value="date-old">Oldest first</option></optgroup>
+            <optgroup label="XP"><option value="xp-high">Highest XP</option><option value="xp-low">Lowest XP</option></optgroup>
+            <optgroup label="Money"><option value="money-high">Highest money</option><option value="money-low">Lowest money</option></optgroup>
+            <optgroup label="Expiration"><option value="exp-soon">Expiring soon</option><option value="exp-later">Expiring later</option></optgroup>
+            <optgroup label="Group"><option value="by-project">By project</option><option value="by-cat">By category</option><option value="done-last">Done last</option><option value="locked-first">Locked first</option></optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <label class="chk-label"><input type="checkbox" id="chk-group-all" onchange="renderGoals('all')" /> Group by project</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-locked-all" onchange="renderGoals('all')" /> Hide locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-only-locked-all" onchange="renderGoals('all')" /> Only locked</label>
+    </div>
+    <div class="form-panel" id="goal-form-all">
+      <div class="form-panel-title">New Quest</div>
+      <div class="form-row">
+        <input type="text" id="goal-title-all" placeholder="Quest title…" style="flex:2;min-width:160px;" />
+        <select id="goal-project-all"><option value="">No project</option></select>
+      </div>
+      <div class="form-row">
+        <select id="goal-cat-all"><option value="health">Health</option><option value="career">Career</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="creative">Creative</option><option value="other">Other</option></select>
+        <select id="goal-diff-all"><option value="1">Easy — +20 XP</option><option value="2">Medium — +50 XP</option><option value="3">Hard — +100 XP</option><option value="4">Legendary — +200 XP</option></select>
+      </div>
+      <div class="form-row"><select id="goal-type-all" onchange="toggleMoneyFields('all')"><option value="normal">Normal quest</option><option value="money">Money quest 💰</option></select></div>
+      <div class="money-fields" id="money-fields-all">
+        <div class="money-row">
+          <div class="money-field-group"><label>Total to pay (€)</label><input type="number" id="goal-money-total-all" placeholder="e.g. 500" min="0" step="0.01" /></div>
+          <div class="money-field-group"><label>Already paid (€)</label><input type="number" id="goal-money-paid-all" placeholder="e.g. 0" min="0" step="0.01" /></div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px;"><div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="goal-expiry-all" style="width:100%;" /></div></div>
+      <textarea id="goal-desc-all" placeholder="Describe your quest… (optional)"></textarea>
+      <div class="form-actions"><button class="btn-cancel" onclick="closeAddGoal('all')">Cancel</button><button class="btn-save" onclick="addGoal('all')">Add Quest ✦</button></div>
+    </div>
+    <div id="goals-list-all"></div>
+  </div>
+
+  <!-- ═══ NORMAL QUESTS TAB ═══ -->
+  <div class="section" id="tab-normal">
+    <div class="toolbar">
+      <button class="add-btn" onclick="openAddGoal('normal')">＋ New Normal Quest</button>
+      <div class="toolbar-right">
+        <div class="sort-wrap">
+          <span class="sort-label">Sort</span>
+          <select class="sort-select" id="sort-select-normal" onchange="renderGoals('normal')">
+            <optgroup label="Date"><option value="date-new">Newest first</option><option value="date-old">Oldest first</option></optgroup>
+            <optgroup label="XP"><option value="xp-high">Highest XP</option><option value="xp-low">Lowest XP</option></optgroup>
+            <optgroup label="Expiration"><option value="exp-soon">Expiring soon</option><option value="exp-later">Expiring later</option></optgroup>
+            <optgroup label="Group"><option value="by-project">By project</option><option value="by-cat">By category</option><option value="done-last">Done last</option><option value="locked-first">Locked first</option></optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <label class="chk-label"><input type="checkbox" id="chk-group-normal" onchange="renderGoals('normal')" /> Group by project</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-locked-normal" onchange="renderGoals('normal')" /> Hide locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-only-locked-normal" onchange="renderGoals('normal')" /> Only locked</label>
+    </div>
+    <div class="form-panel" id="goal-form-normal">
+      <div class="form-panel-title">New Normal Quest</div>
+      <div class="form-row">
+        <input type="text" id="goal-title-normal" placeholder="Quest title…" style="flex:2;min-width:160px;" />
+        <select id="goal-project-normal"><option value="">No project</option></select>
+      </div>
+      <div class="form-row">
+        <select id="goal-cat-normal"><option value="health">Health</option><option value="career">Career</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="creative">Creative</option><option value="other">Other</option></select>
+        <select id="goal-diff-normal"><option value="1">Easy — +20 XP</option><option value="2">Medium — +50 XP</option><option value="3">Hard — +100 XP</option><option value="4">Legendary — +200 XP</option></select>
+      </div>
+      <div class="form-row" style="margin-bottom:10px;"><div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="goal-expiry-normal" style="width:100%;" /></div></div>
+      <textarea id="goal-desc-normal" placeholder="Describe your quest… (optional)"></textarea>
+      <div class="form-actions"><button class="btn-cancel" onclick="closeAddGoal('normal')">Cancel</button><button class="btn-save" onclick="addGoal('normal')">Add Quest ✦</button></div>
+    </div>
+    <div id="goals-list-normal"></div>
+  </div>
+
+  <!-- ═══ MONEY QUESTS TAB ═══ -->
+  <div class="section" id="tab-money">
+    <div class="money-circle-section" id="money-circle-section2" style="display:none;">
+      <div class="money-circle-title">💰 Money Quest Tracker</div>
+      <div class="money-circle-body">
+        <div class="circle-wrap">
+          <svg class="circle-svg" viewBox="0 0 140 140">
+            <circle class="circle-track" cx="70" cy="70" r="55"/>
+            <circle class="circle-fill" id="circFill2" cx="70" cy="70" r="55" stroke-dasharray="345.6" stroke-dashoffset="345.6"/>
+          </svg>
+          <div class="circle-label">
+            <div class="circle-paid" id="circPaid2">€0</div>
+            <div class="circle-sep">of</div>
+            <div class="circle-total" id="circTotal2">€0</div>
+            <div class="circle-pct" id="circPct2">0%</div>
+          </div>
+        </div>
+        <div class="money-details" id="money-details2"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button class="add-btn" onclick="openAddGoal('money')">＋ New Money Quest</button>
+      <div class="toolbar-right">
+        <div class="sort-wrap">
+          <span class="sort-label">Sort</span>
+          <select class="sort-select" id="sort-select-money" onchange="renderGoals('money')">
+            <optgroup label="Date"><option value="date-new">Newest first</option><option value="date-old">Oldest first</option></optgroup>
+            <optgroup label="Money"><option value="money-high">Highest amount</option><option value="money-low">Lowest amount</option></optgroup>
+            <optgroup label="Expiration"><option value="exp-soon">Expiring soon</option><option value="exp-later">Expiring later</option></optgroup>
+            <optgroup label="Group"><option value="by-project">By project</option><option value="done-last">Done last</option><option value="locked-first">Locked first</option></optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <label class="chk-label"><input type="checkbox" id="chk-group-money" onchange="renderGoals('money')" /> Group by project</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-locked-money" onchange="renderGoals('money')" /> Hide locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-only-locked-money" onchange="renderGoals('money')" /> Only locked</label>
+    </div>
+    <div class="form-panel" id="goal-form-money">
+      <div class="form-panel-title">New Money Quest</div>
+      <div class="form-row">
+        <input type="text" id="goal-title-money" placeholder="Quest title…" style="flex:2;min-width:160px;" />
+        <select id="goal-project-money"><option value="">No project</option></select>
+      </div>
+      <div class="form-row">
+        <select id="goal-cat-money"><option value="health">Health</option><option value="career">Career</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="creative">Creative</option><option value="other">Other</option></select>
+        <select id="goal-diff-money"><option value="1">Easy — +20 XP</option><option value="2">Medium — +50 XP</option><option value="3">Hard — +100 XP</option><option value="4">Legendary — +200 XP</option></select>
+      </div>
+      <div class="money-row" style="margin-bottom:10px;">
+        <div class="money-field-group"><label>Total to pay (€)</label><input type="number" id="goal-money-total-money" placeholder="e.g. 500" min="0" step="0.01" /></div>
+        <div class="money-field-group"><label>Already paid (€)</label><input type="number" id="goal-money-paid-money" placeholder="e.g. 0" min="0" step="0.01" /></div>
+      </div>
+      <div class="form-row" style="margin-bottom:10px;"><div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="goal-expiry-money" style="width:100%;" /></div></div>
+      <textarea id="goal-desc-money" placeholder="Describe your quest… (optional)"></textarea>
+      <div class="form-actions"><button class="btn-cancel" onclick="closeAddGoal('money')">Cancel</button><button class="btn-save" onclick="addGoal('money')">Add Quest ✦</button></div>
+    </div>
+    <div id="goals-list-money"></div>
+  </div>
+
+  <!-- ═══ PROJECTS TAB ═══ -->
+  <div class="section" id="tab-projects">
+    <div class="toolbar">
+      <button class="add-btn" onclick="toggleForm('project-form')">＋ New Project</button>
+    </div>
+    <div class="filter-row">
+      <label class="chk-label"><input type="checkbox" id="chk-hide-locked-p" onchange="renderProjects()" /> Hide locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-only-locked-p" onchange="renderProjects()" /> Only locked</label>
+    </div>
+    <div class="form-panel" id="project-form">
+      <div class="form-panel-title">New Project</div>
+      <div class="form-row">
+        <input type="text" id="proj-name" placeholder="Project name…" style="flex:2;" />
+        <input type="text" id="proj-icon" placeholder="🗺" maxlength="2" style="width:64px;flex:none;text-align:center;font-size:22px;" />
+      </div>
+      <div class="form-row">
+        <div style="flex:1;"><span class="form-field-label">XP reward on completion (optional)</span><input type="number" id="proj-xp" placeholder="e.g. 500" min="0" step="50" style="width:100%;" /></div>
+        <div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="proj-expiry" style="width:100%;" /></div>
+      </div>
+      <textarea id="proj-desc" placeholder="What is this project about? (optional)"></textarea>
+      <div class="form-actions"><button class="btn-cancel" onclick="toggleForm('project-form')">Cancel</button><button class="btn-save" onclick="addProject()">Create Project ✦</button></div>
+    </div>
+    <div id="projects-list"></div>
+  </div>
+
+  <!-- ═══ STATS TAB ═══ -->
+  <div class="section" id="tab-stats">
+    <div class="big-pct-wrap">
+      <div><span class="big-pct-number" id="bigPct">0</span><span class="big-pct-symbol">%</span></div>
+      <div class="big-pct-label">Overall Completion</div>
+      <div class="big-pct-sub" id="bigPctSub">0 of 0 quests completed</div>
+    </div>
+    <div class="stats-section-title">Overview</div>
+    <div class="stats-grid" id="overview-tiles"></div>
+    <div class="stats-section-title">By Project</div>
+    <div id="project-stat-rows"></div>
+    <div class="stats-section-title">By Category</div>
+    <div class="cat-stats-grid" id="cat-stat-tiles"></div>
+  </div>
+
+</div>
+
+<!-- ═══ EDIT QUEST MODAL ═══ -->
+<div class="modal-overlay" id="edit-modal" onclick="closeEditIfBg(event)">
+  <div class="modal">
+    <div class="modal-title">Edit Quest</div>
+    <input type="text" id="edit-title" placeholder="Quest title…" />
+    <div class="modal-row" style="margin-bottom:10px;">
+      <select id="edit-cat"><option value="health">Health</option><option value="career">Career</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="creative">Creative</option><option value="other">Other</option></select>
+      <select id="edit-diff"><option value="1">Easy — +20 XP</option><option value="2">Medium — +50 XP</option><option value="3">Hard — +100 XP</option><option value="4">Legendary — +200 XP</option></select>
+    </div>
+    <select id="edit-project" style="margin-bottom:10px;"><option value="">No project</option></select>
+    <select id="edit-type" onchange="toggleEditMoneyFields()" style="margin-bottom:10px;"><option value="normal">Normal quest</option><option value="money">Money quest 💰</option></select>
+    <div class="modal-money-fields" id="edit-money-fields">
+      <div class="modal-row">
+        <div><span class="modal-label">Total to pay (€)</span><input type="number" id="edit-money-total" placeholder="500" min="0" step="0.01" /></div>
+        <div><span class="modal-label">Already paid (€)</span><input type="number" id="edit-money-paid" placeholder="0" min="0" step="0.01" /></div>
+      </div>
+    </div>
+    <span class="modal-label">Expiration date (optional)</span>
+    <input type="date" id="edit-expiry" />
+    <textarea id="edit-desc" placeholder="Description… (optional)"></textarea>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeEdit()">Cancel</button><button class="btn-save" onclick="saveEdit()">Save Changes ✦</button></div>
+  </div>
+</div>
+
+<!-- ═══ EDIT PROJECT MODAL ═══ -->
+<div class="proj-modal-overlay" id="edit-proj-modal" onclick="closeProjEditIfBg(event)">
+  <div class="modal">
+    <div class="modal-title">Edit Project</div>
+    <div class="modal-row" style="margin-bottom:10px;">
+      <input type="text" id="ep-name" placeholder="Project name…" style="flex:2;" />
+      <input type="text" id="ep-icon" placeholder="🗺" maxlength="2" style="width:64px;flex:none;text-align:center;font-size:22px;" />
+    </div>
+    <span class="modal-label">XP reward on completion (optional)</span>
+    <input type="number" id="ep-xp" placeholder="e.g. 500" min="0" step="50" />
+    <span class="modal-label">Expiration date (optional)</span>
+    <input type="date" id="ep-expiry" />
+    <textarea id="ep-desc" placeholder="Description… (optional)"></textarea>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeProjEdit()">Cancel</button><button class="btn-save" onclick="saveProjEdit()">Save Changes ✦</button></div>
+  </div>
+</div>
+
+<!-- ═══ LOCK MODAL ═══ -->
+<div class="lock-modal-overlay" id="lock-modal" onclick="closeLockIfBg(event)">
+  <div class="lock-modal">
+    <div class="lock-modal-title" id="lock-modal-title">🔒 Lock this item</div>
+    <div class="lock-option" id="lopt-date" onclick="selectLockOpt('date')">
+      <input type="radio" class="lock-option-radio" name="lock-opt" />
+      <div class="lock-option-text">
+        <div class="lock-option-title">Unlock on a date</div>
+        <div class="lock-option-sub">Choose a future date when it auto-unlocks</div>
+        <div class="lock-sub-input" id="lsub-date"><input type="date" id="lock-date-val" /></div>
+      </div>
+    </div>
+    <div class="lock-option" id="lopt-xp" onclick="selectLockOpt('xp')">
+      <input type="radio" class="lock-option-radio" name="lock-opt" />
+      <div class="lock-option-text">
+        <div class="lock-option-title">Unlock at XP milestone</div>
+        <div class="lock-option-sub">Auto-unlocks when you reach a total XP amount</div>
+        <div class="lock-sub-input" id="lsub-xp"><input type="number" id="lock-xp-val" placeholder="e.g. 500" min="0" step="50" /></div>
+      </div>
+    </div>
+    <div class="lock-option" id="lopt-none" onclick="selectLockOpt('none')">
+      <input type="radio" class="lock-option-radio" name="lock-opt" />
+      <div class="lock-option-text">
+        <div class="lock-option-title">Just lock it</div>
+        <div class="lock-option-sub">No auto-unlock — manually unlock whenever</div>
+      </div>
+    </div>
+    <div class="lock-actions">
+      <button class="btn-cancel" onclick="closeLockModal()">Cancel</button>
+      <button class="btn-lock" onclick="confirmLock()">🔒 Lock ✦</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var XP_MAP={'1':20,'2':50,'3':100,'4':200};
+var DIFF_STARS={'1':'★☆☆☆','2':'★★☆☆','3':'★★★☆','4':'★★★★'};
+var LEVELS=['Novice','Apprentice','Seeker','Adept','Champion','Legend','Mythic'];
+var LEVEL_XP=[0,100,250,500,900,1500,2500];
+var CATS=['health','career','personal','finance','creative','other'];
+var CIRC_C=2*Math.PI*55;
+
+/* ── Your data embedded here — loaded on first visit ── */
+var EMBEDDED_DATA={"goals":[{"id":"g1781575784092","title":"Klarna Ink.","desc":"1043459428","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1781575784092,"moneyTotal":141.26,"moneyPaid":0},{"id":"g1781575429910","title":"Otto Rechung","desc":"R-DE-340596305-2025-24937075","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1781575429910,"moneyTotal":239.73,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1781574790715","title":"Klarna Ink.","desc":"101000112198195","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-25","done":false,"created":1781574790715,"moneyTotal":64.72,"moneyPaid":0},{"id":"g1781574323715","title":"Otto Ink.","desc":"EOS : 44699286201\nRatenzahlung Owls. 101 Euro ab dem 21.07.2026","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-07-21","done":false,"created":1781574323715,"moneyTotal":305,"moneyPaid":0,"locked":false,"lockType":"date","lockUntil":"2026-07-20","lockXP":null},{"id":"g1780682765873","title":"Rundfunk","desc":"","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-05-15","done":false,"created":1780682765873,"moneyTotal":150.4,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780681735982","title":"EON","desc":"⚠️","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-10","done":true,"created":1780681735982,"moneyTotal":121.1,"moneyPaid":121.1},{"id":"g1780681590783","title":"Otto Rechnung","desc":"R-DE-340596305-2025-27139784","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-07-07","done":false,"created":1780681590783,"moneyTotal":42.36,"moneyPaid":0},{"id":"g1780681256900","title":"Otto ink.","desc":"64688597701\nRaten : 60+60+61,33","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-08-31","done":false,"created":1780681256900,"moneyTotal":181.33,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780681093951","title":"Otto Rechnung","desc":"R-DE-353544604-2025-18908","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-07-07","done":false,"created":1780681093951,"moneyTotal":40,"moneyPaid":0},{"id":"g1780680680629","title":"Otto Rechnung","desc":"R-DE-118475690-2024-3646595","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-07-07","done":false,"created":1780680680629,"moneyTotal":35.39,"moneyPaid":0},{"id":"g1780680497697","title":"Otto ink.","desc":"EOS 84696105401","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-07-31","done":false,"created":1780680497697,"moneyTotal":109.89,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780680058368","title":"Otto Rechnung","desc":"R-DE-118475690-2024-18674937","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-14","done":false,"created":1780680058368,"moneyTotal":40.97,"moneyPaid":0},{"id":"g1780679974569","title":"Otto Rechnung","desc":"R-DE-815749398-2025-13308","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1780679974569,"moneyTotal":44.11,"moneyPaid":0},{"id":"g1780679834037","title":"Otto Rechnung","desc":"R-DE-362296066-2025-47791","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-07-01","done":false,"created":1780679834037,"moneyTotal":139.06,"moneyPaid":0},{"id":"g1780679678438","title":"Klarna ink.","desc":"100117904829","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-01","done":false,"created":1780679678438,"moneyTotal":73,"moneyPaid":0},{"id":"g1780679593439","title":"Klarna","desc":"100117695674\nRaten : 60+62,39","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-07-31","done":false,"created":1780679593439,"moneyTotal":126.39,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780679401077","title":"Paypal","desc":"","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":true,"created":1780679401077,"moneyTotal":53.56,"moneyPaid":55.56},{"id":"g1780679362676","title":"Ixmal Ink.","desc":"Aktenzeichen: 03450.26.02.0003.0\nKOHL","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":true,"created":1780679362676,"moneyTotal":214.85,"moneyPaid":214.85,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780678951246","title":"Klarna ink.","desc":"100117789428","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1780678951246,"moneyTotal":35.54,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780678753365","title":"Klarna ink.","desc":"100117786515","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-13","done":false,"created":1780678753365,"moneyTotal":77.54,"moneyPaid":0},{"id":"g1780678528267","title":"Klarna ink.","desc":"101000054695653","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1780678528267,"moneyTotal":135.23,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1780678436483","title":"Klarna ink.","desc":"100117915908","cat":"finance","diff":"1","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1780678436483,"moneyTotal":39.98,"moneyPaid":0},{"id":"g1779215106854","title":"Auto Versicherung","desc":"","cat":"finance","diff":"3","projectId":"p1779215972849","type":"money","expiry":"2027-04-30","done":false,"created":1779215106854,"moneyTotal":2400,"moneyPaid":0,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"g1779215045635","title":"Auto Kauf","desc":"","cat":"finance","diff":"4","projectId":"p1779215972849","type":"money","expiry":"2027-04-30","done":false,"created":1779215045635,"moneyTotal":8000,"moneyPaid":0,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"g1779214977517","title":"Neue Wohnung Kaution","desc":"","cat":"finance","diff":"3","projectId":"p1779215557256","type":"money","expiry":"2027-03-31","done":false,"created":1779214977517,"moneyTotal":3000,"moneyPaid":0,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"g1779214935449","title":"Umzug","desc":"","cat":"personal","diff":"2","projectId":"p1779215557256","type":"money","expiry":"2027-03-31","done":false,"created":1779214935449,"moneyTotal":500,"moneyPaid":0,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"g1779214885004","title":"Zied Schuld","desc":"","cat":"finance","diff":"3","projectId":"p1779214886527","type":"money","expiry":"2026-12-30","done":false,"created":1779214885004,"moneyTotal":1500,"moneyPaid":0},{"id":"g1779214857043","title":"Boubou Schuld","desc":"","cat":"finance","diff":"2","projectId":"p1779214858428","type":"money","expiry":"2026-08-31","done":false,"created":1779214857043,"moneyTotal":600,"moneyPaid":0},{"id":"g1779214706579","title":"Auto","desc":"","cat":"personal","diff":"4","projectId":"p1779214660430","type":"money","expiry":"2026-12-31","done":false,"created":1779214706579,"moneyTotal":4000,"moneyPaid":0},{"id":"g1779213654293","title":"Büro","desc":"","cat":"other","diff":"1","projectId":"p1779212868384","type":"money","expiry":"2026-06-30","done":false,"created":1779213654293,"moneyTotal":60,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779213578092","title":"Zahartzt besuchen","desc":"","cat":"health","diff":"3","projectId":"p1779212868384","type":"normal","expiry":"2026-06-30","done":false,"created":1779213578092,"locked":true,"lockType":"none","lockUntil":null,"lockXP":null},{"id":"g1779213534408","title":"Permis Zahlunegn","desc":"","cat":"personal","diff":"4","projectId":"p1779050948175","type":"money","expiry":"2026-11-30","done":false,"created":1779213534408,"moneyTotal":3200,"moneyPaid":0},{"id":"g1779213363822","title":"KK  Extra","desc":";D","cat":"finance","diff":"4","projectId":"p1779051059842","type":"money","expiry":"2026-12-31","done":false,"created":1779213363822,"moneyTotal":600,"moneyPaid":0,"locked":true,"lockType":"none","lockUntil":null,"lockXP":null},{"id":"g1779213317172","title":"KK Tf","desc":"also an extra Bonus in Monatliche Abzüge.","cat":"finance","diff":"4","projectId":"p1779051059842","type":"money","expiry":"2026-12-31","done":false,"created":1779213317172,"moneyTotal":2500,"moneyPaid":0,"locked":true,"lockType":"none","lockUntil":null,"lockXP":null},{"id":"g1779213266055","title":"KK Ad","desc":"Extra Bonus im \"Monatlichen Abzüge \"beim Complete ;D","cat":"finance","diff":"4","projectId":"p1779051059842","type":"money","expiry":"2026-12-31","done":false,"created":1779213266055,"moneyTotal":3000,"moneyPaid":0,"locked":true,"lockType":"none","lockUntil":null,"lockXP":null},{"id":"g1779213134470","title":"Nawel","desc":"","cat":"finance","diff":"3","projectId":"p1779051059842","type":"money","expiry":"2026-11-30","done":false,"created":1779213134470,"moneyTotal":1000,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779213067652","title":"Gasri","desc":"","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1779213067652,"moneyTotal":350,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779213000985","title":"GYM","desc":"","cat":"health","diff":"4","projectId":"p1779212868384","type":"normal","expiry":"2026-05-31","done":false,"created":1779213000985},{"id":"g1779212962102","title":"FLX4","desc":"","cat":"creative","diff":"3","projectId":"p1779212868384","type":"money","expiry":"2026-08-31","done":false,"created":1779212962102,"moneyTotal":150,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779212388479","title":"Graduate","desc":"","cat":"career","diff":"4","projectId":"p1779212868384","type":"normal","expiry":"2025-09-30","done":true,"created":1779212388479},{"id":"g1779051210276","title":"ID","desc":"🪪","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-07-30","done":false,"created":1779051210277,"moneyTotal":160,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779051149859","title":"URKUNDE","desc":"","cat":"finance","diff":"2","projectId":"p1779051059842","type":"money","expiry":"2026-05-31","done":false,"created":1779051149859,"moneyTotal":160,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null},{"id":"g1779051108876","title":"Kaution","desc":"","cat":"finance","diff":"3","projectId":"p1779051059842","type":"money","expiry":"2026-06-30","done":false,"created":1779051108876,"moneyTotal":500,"moneyPaid":0,"locked":false,"lockType":null,"lockUntil":null,"lockXP":null}],"projects":[{"id":"p1779215972849","name":"Auto l Dar","desc":"","icon":"🗺","expiry":"2027-04-30","xpReward":1000,"completedXPGranted":false,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"p1779215557256","name":"New Breeze","desc":"🏡","icon":"🗺","expiry":"2027-03-31","xpReward":1000,"completedXPGranted":false,"locked":true,"lockType":"date","lockUntil":"2027-04-30","lockXP":null},{"id":"p1779214886527","name":"ZIED","desc":"","icon":"🗺","expiry":"2026-12-30","xpReward":750,"completedXPGranted":false},{"id":"p1779214858428","name":"BOUBOU","desc":"","icon":"🗺","expiry":"2026-08-31","xpReward":700,"completedXPGranted":false},{"id":"p1779214660430","name":"lbnina","desc":"🏎️","icon":"🗺","expiry":"2026-12-31","xpReward":1000,"completedXPGranted":false,"locked":true,"lockType":"date","lockUntil":"2026-11-30","lockXP":null},{"id":"p1779212868384","name":"BRANDO LIFe","desc":"","icon":"🗺","expiry":"2026-08-31","xpReward":500,"completedXPGranted":false},{"id":"p1779051059842","name":"Schulden","desc":"","icon":"🗺","expiry":"2026-07-31","xpReward":1000,"completedXPGranted":false},{"id":"p1779050948175","name":"Permis","desc":"","icon":"🗺","expiry":"2026-09-30","xpReward":700,"completedXPGranted":false,"locked":false,"lockType":"date","lockUntil":"2026-07-31","lockXP":null}]};
+
+var state=loadState();
+var editingId=null,editingProjId=null,lockingId=null,lockingType=null,lockOpt='none';
+var activeTab='all';
+
+/* ── Storage ── */
+var STORAGE_KEY='lq_github_v1';
+
+function loadState(){
+  try{var r=localStorage.getItem(STORAGE_KEY);if(r){var s=JSON.parse(r);if(s&&s.goals&&s.projects)return s;}}catch(e){}
+  // First run on GitHub: load the embedded backup data
+  return JSON.parse(JSON.stringify(EMBEDDED_DATA));
+}
+function saveState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+  try{sessionStorage.setItem(STORAGE_KEY+'_bak',JSON.stringify(state));}catch(e){}
+  updateBackupStatus();
+}
+
+function updateBackupStatus(){
+  var el=document.getElementById('backup-status');
+  if(!el)return;
+  var now=new Date();
+  el.textContent='Auto-saved '+now.toLocaleTimeString();
+}
+
+/* ── Export / Import ── */
+function exportData(){
+  var json=JSON.stringify(state,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='lifequest-backup-'+new Date().toISOString().split('T')[0]+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✦ Data exported!');
+}
+function importData(evt){
+  var file=evt.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var imported=JSON.parse(e.target.result);
+      if(!imported.goals||!imported.projects){showToast('⚠ Invalid backup file');return;}
+      state=imported;saveState();
+      renderAll();
+      showToast('✦ Data imported successfully!');
+    }catch(ex){showToast('⚠ Could not read file');}
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+
+/* ── Helpers ── */
+function getLevel(xp){var lv=0;for(var i=0;i<LEVEL_XP.length;i++){if(xp>=LEVEL_XP[i])lv=i;else break;}return lv;}
+function getLevelProgress(xp){var lv=getLevel(xp);if(lv>=LEVELS.length-1)return{pct:100,cur:xp,next:xp};var c=LEVEL_XP[lv],n=LEVEL_XP[lv+1];return{pct:Math.round((xp-c)/(n-c)*100),cur:xp-c,next:n-c};}
+
+function isLocked(item){
+  if(!item||!item.locked)return false;
+  var xp=baseXP();
+  if(item.lockType==='date'&&item.lockUntil){var d=daysUntil(item.lockUntil);if(d!==null&&d<=0){item.locked=false;return false;}}
+  if(item.lockType==='xp'&&item.lockXP){if(xp>=item.lockXP){item.locked=false;return false;}}
+  return true;
+}
+
+/* Projects lock cascades to quests */
+function isGoalEffectiveLocked(g){
+  if(isLocked(g))return true;
+  if(g.projectId){var p=state.projects.find(function(x){return x.id===g.projectId;});if(p&&isLocked(p))return true;}
+  return false;
+}
+
+function baseXP(){
+  return state.goals.filter(function(g){return g.done&&!isGoalEffectiveLocked(g);}).reduce(function(s,g){return s+XP_MAP[g.diff];},0);
+}
+function totalXP(){
+  var base=baseXP();
+  var bonus=state.projects.filter(function(p){return p.completedXPGranted;}).reduce(function(s,p){return s+(p.xpReward||0);},0);
+  return base+bonus;
+}
+
+function pctClass(p){if(p>=70)return 'c-green';if(p>=35)return 'c-amber';return 'c-red';}
+function fmt(n){return '€'+(parseFloat(n)||0).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function daysUntil(dateStr){
+  if(!dateStr)return null;
+  var now=new Date();now.setHours(0,0,0,0);
+  var exp=new Date(dateStr);exp.setHours(0,0,0,0);
+  return Math.round((exp-now)/(1000*60*60*24));
+}
+function countdownBadge(dateStr){
+  if(!dateStr)return '';
+  var d=daysUntil(dateStr);var cls,txt;
+  if(d<0){cls='expired';txt='Expired '+Math.abs(d)+' day'+(Math.abs(d)===1?'':'s')+' ago';}
+  else if(d===0){cls='urgent';txt='Expires today!';}
+  else if(d<=3){cls='urgent';txt=d+' day'+(d===1?'':'s')+' left';}
+  else if(d<=14){cls='soon';txt=d+' days left';}
+  else{cls='later';txt=d+' days left';}
+  return '<span class="countdown '+cls+'">⏳ '+txt+'</span>';
+}
+function cardExpiryClass(dateStr){
+  if(!dateStr)return '';var d=daysUntil(dateStr);
+  if(d<=3)return ' expiring-urgent';if(d<=14)return ' expiring-soon';return '';
+}
+function expiryForInput(v){return v||'';}
+
+function lockBadge(item,effectiveLocked){
+  if(effectiveLocked===undefined)effectiveLocked=isLocked(item);
+  if(!effectiveLocked)return '';
+  var xp=totalXP();var txt='🔒 Locked';
+  if(item.lockType==='date'&&item.lockUntil){var d=daysUntil(item.lockUntil);if(d>0)txt='🔒 Unlocks in '+d+' day'+(d===1?'':'s');}
+  else if(item.lockType==='xp'&&item.lockXP){var need=item.lockXP-xp;if(need>0)txt='🔒 Need '+need+' more XP';}
+  return '<span class="lock-badge">'+txt+'</span>';
+}
+
+/* ── HUD ── */
+function updateHUD(){
+  var xp=totalXP(),lv=getLevel(xp),prog=getLevelProgress(xp);
+  document.getElementById('levelLabel').textContent=LEVELS[lv]+' · Lv '+(lv+1);
+  document.getElementById('xpBar').style.width=prog.pct+'%';
+  document.getElementById('xpLabel').textContent=prog.cur+' / '+prog.next+' XP';
+  document.getElementById('statTotal').textContent=state.goals.length;
+  document.getElementById('statDone').textContent=state.goals.filter(function(g){return g.done;}).length;
+  document.getElementById('statXP').textContent=xp;
+  refreshAllProjectSelects();
+  checkProjectCompletion();
+}
+
+function checkProjectCompletion(){
+  state.projects.forEach(function(p){
+    if(p.xpReward&&!p.completedXPGranted&&!isLocked(p)){
+      var pg=state.goals.filter(function(g){return g.projectId===p.id;});
+      if(pg.length>0&&pg.every(function(g){return g.done;})){
+        p.completedXPGranted=true;saveState();
+        showToast('🏆 Project complete! +'+p.xpReward+' XP bonus!');
+      }
+    }
+  });
+}
+
+function refreshAllProjectSelects(){
+  ['goal-project-all','goal-project-normal','goal-project-money','edit-project'].forEach(function(id){
+    var sel=document.getElementById(id);if(!sel)return;
+    var cur=sel.value;
+    sel.innerHTML='<option value="">No project</option>';
+    state.projects.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent=(p.icon||'🗺')+' '+p.name;sel.appendChild(o);});
+    if(cur)sel.value=cur;
+  });
+}
+
+/* ── Money circles ── */
+function updateMoneyCircle(suffix){
+  suffix=suffix||'';
+  var mGoals=state.goals.filter(function(g){return g.type==='money'&&!isGoalEffectiveLocked(g);});
+  var section=document.getElementById('money-circle-section'+(suffix?suffix:''));
+  if(!section)return;
+  if(!mGoals.length){section.style.display='none';return;}
+  section.style.display='block';
+  var tt=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
+  var tp=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
+  var pct=tt>0?Math.min(100,Math.round(tp/tt*100)):0;
+  var id=suffix?suffix:'';
+  document.getElementById('circFill'+id).style.strokeDashoffset=CIRC_C-(CIRC_C*pct/100);
+  document.getElementById('circPaid'+id).textContent=fmt(tp);
+  document.getElementById('circTotal'+id).textContent=fmt(tt);
+  document.getElementById('circPct'+id).textContent=pct+'%';
+  var detHtml='';
+  mGoals.forEach(function(g){
+    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
+    detHtml+='<div class="money-detail-row"><span class="money-detail-label">'+esc(g.title)+'</span><span class="money-detail-val '+(gp>=100?'green':gp>0?'gold':'soft')+'">'+fmt(p)+' / '+fmt(t)+'</span></div>';
+  });
+  document.getElementById('money-details'+id).innerHTML=detHtml;
+}
+
+/* ── Sort/filter per tab ── */
+function getGoalsForTab(tab){
+  var gs=state.goals.slice();
+  if(tab==='normal')gs=gs.filter(function(g){return g.type!=='money';});
+  else if(tab==='money')gs=gs.filter(function(g){return g.type==='money';});
+  return gs;
+}
+
+function applyFiltersAndSort(gs,tab){
+  var sfx=tab==='all'?'all':tab;
+  var hideLocked=document.getElementById('chk-hide-locked-'+sfx).checked;
+  var onlyLocked=document.getElementById('chk-only-locked-'+sfx).checked;
+  gs=gs.filter(function(g){
+    var locked=isGoalEffectiveLocked(g);
+    if(hideLocked&&locked)return false;
+    if(onlyLocked&&!locked)return false;
+    return true;
+  });
+  var mode=document.getElementById('sort-select-'+sfx).value;
+  if(mode==='date-new')     gs.sort(function(a,b){return(b.created||0)-(a.created||0);});
+  else if(mode==='date-old')gs.sort(function(a,b){return(a.created||0)-(b.created||0);});
+  else if(mode==='xp-high') gs.sort(function(a,b){return XP_MAP[b.diff]-XP_MAP[a.diff];});
+  else if(mode==='xp-low')  gs.sort(function(a,b){return XP_MAP[a.diff]-XP_MAP[b.diff];});
+  else if(mode==='money-high')gs.sort(function(a,b){return(parseFloat(b.moneyTotal)||0)-(parseFloat(a.moneyTotal)||0);});
+  else if(mode==='money-low') gs.sort(function(a,b){return(parseFloat(a.moneyTotal)||0)-(parseFloat(b.moneyTotal)||0);});
+  else if(mode==='exp-soon') gs.sort(function(a,b){return(a.expiry?daysUntil(a.expiry):99999)-(b.expiry?daysUntil(b.expiry):99999);});
+  else if(mode==='exp-later')gs.sort(function(a,b){return(b.expiry?daysUntil(b.expiry):-99999)-(a.expiry?daysUntil(a.expiry):-99999);});
+  else if(mode==='by-cat')  gs.sort(function(a,b){return a.cat.localeCompare(b.cat);});
+  else if(mode==='done-last')gs.sort(function(a,b){return(a.done?1:0)-(b.done?1:0);});
+  else if(mode==='locked-first')gs.sort(function(a,b){return(isGoalEffectiveLocked(b)?1:0)-(isGoalEffectiveLocked(a)?1:0);});
+  else if(mode==='by-project')gs.sort(function(a,b){return(a.projectId||'zzz').localeCompare(b.projectId||'zzz')||(a.created||0)-(b.created||0);});
+  return gs;
+}
+
+/* ── Quest card HTML ── */
+function questCardHTML(g){
+  var proj=g.projectId?state.projects.find(function(p){return p.id===g.projectId;}):null;
+  var isMoney=g.type==='money';
+  var eLocked=isGoalEffectiveLocked(g);
+  var selfLocked=isLocked(g);
+  // cascade lock: if project is locked, the quest is shown locked even if not self-locked
+  var projLocked=g.projectId?(function(){var p=state.projects.find(function(x){return x.id===g.projectId;});return p&&isLocked(p);}()):false;
+  var moneyBar='',payRow='';
+  if(isMoney&&!eLocked){
+    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
+    moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' paid</span><span>'+fmt(t)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div></div>';
+    if(!g.done)payRow='<div class="pay-row"><input class="pay-input" type="number" id="pay-'+g.id+'" placeholder="Amount (€)" min="0" step="0.01" /><button class="pay-btn" onclick="addPayment(\''+g.id+'\')">Pay ✦</button></div>';
+  }
+  var expClass=g.done||eLocked?'':cardExpiryClass(g.expiry);
+  var cdBadge=g.done||eLocked?'':countdownBadge(g.expiry);
+  var lkBadge=eLocked?lockBadge(projLocked?proj:g,true):'';
+  var cascadeNote=projLocked&&!selfLocked?'<span style="font-size:10px;color:var(--purple);font-style:italic;margin-left:4px;">(project locked)</span>':'';
+  return '<div class="goal-card'+(g.done?' done':'')+(isMoney?' money-card':'')+(eLocked?' locked-card':'')+expClass+'" id="gc-'+g.id+'">'
+    +'<div class="goal-row">'
+      +'<button class="check-btn" onclick="toggleGoal(\''+g.id+'\')" title="'+(g.done?'Mark incomplete':'Mark complete')+'"'+(eLocked?' disabled style="opacity:0.4;cursor:default;"':'')+'><span class="checkmark">✓</span></button>'
+      +'<div class="goal-body">'
+        +'<div class="goal-title">'+esc(g.title)+'</div>'
+        +(g.desc?'<div class="goal-desc">'+esc(g.desc)+'</div>':'')
+        +'<div class="goal-meta">'
+          +(isMoney?'<span class="tag tag-money">💰 money</span>':'<span class="tag tag-'+g.cat+'">'+g.cat+'</span>')
+          +'<span class="diff-stars">'+DIFF_STARS[g.diff]+'</span>'
+          +'<span class="xp-badge">+'+XP_MAP[g.diff]+' XP</span>'
+          +(isMoney?'<span class="money-badge">'+fmt(g.moneyTotal||0)+'</span>':'')
+          +(proj?'<span class="proj-badge">📁 '+esc(proj.icon||'🗺')+' '+esc(proj.name)+'</span>':'')
+          +cdBadge+lkBadge+cascadeNote
+        +'</div>'
+        +moneyBar+payRow
+      +'</div>'
+      +'<div class="goal-actions">'
+        +(projLocked?'':'<button class="icon-btn'+(selfLocked?' lock-active':'')+'" onclick="handleLockGoal(\''+g.id+'\')" title="'+(selfLocked?'Unlock':'Lock')+'">'+(selfLocked?'🔒':'🔓')+'</button>')
+        +'<button class="icon-btn" onclick="openEdit(\''+g.id+'\')" title="Edit">✎</button>'
+        +'<button class="icon-btn del" onclick="deleteGoal(\''+g.id+'\')" title="Delete">✕</button>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+/* ── Render goals for a given tab ── */
+function renderGoals(tab){
+  tab=tab||'all';
+  var sfx=tab==='all'?'all':tab;
+  var container=document.getElementById('goals-list-'+sfx);
+  var grouped=document.getElementById('chk-group-'+sfx).checked;
+  var mode=document.getElementById('sort-select-'+sfx).value;
+  var gs=applyFiltersAndSort(getGoalsForTab(tab),tab);
+  if(!gs.length){container.innerHTML='<div class="empty"><span class="empty-icon">♠</span>No quests found.</div>';return;}
+  if(grouped||mode==='by-project'){
+    var sections={},order=[];
+    gs.forEach(function(g){var key=g.projectId||'__none__';if(!sections[key]){sections[key]=[];order.push(key);}sections[key].push(g);});
+    var html='';
+    order.forEach(function(key){
+      var proj=key!=='__none__'?state.projects.find(function(p){return p.id===key;}):null;
+      html+='<div class="group-header">'+(proj?(proj.icon||'🗺')+' '+esc(proj.name):'♠ No project')+'</div>';
+      html+=sections[key].map(questCardHTML).join('');
+    });
+    container.innerHTML=html;
+  } else {
+    container.innerHTML=gs.map(questCardHTML).join('');
+  }
+}
+
+function renderAllGoalTabs(){
+  updateMoneyCircle('');
+  updateMoneyCircle('2');
+  renderGoals('all');
+  renderGoals('normal');
+  renderGoals('money');
+}
+
+/* ── Payments ── */
+function addPayment(id){
+  var inp=document.getElementById('pay-'+id),amount=parseFloat(inp?inp.value:0);
+  if(isNaN(amount)||amount<=0){if(inp)inp.focus();return;}
+  var g=state.goals.find(function(x){return x.id===id;});if(!g)return;
+  g.moneyPaid=(parseFloat(g.moneyPaid)||0)+amount;
+  if(g.moneyTotal&&g.moneyPaid>=parseFloat(g.moneyTotal)){g.done=true;showToast('💰 Fully paid! Quest complete!');}
+  else showToast('💰 Payment recorded: '+fmt(amount));
+  saveState();renderAll();
+}
+
+function toggleGoal(id){
+  var g=state.goals.find(function(x){return x.id===id;});if(!g||isGoalEffectiveLocked(g))return;
+  g.done=!g.done;
+  saveState();renderAll();
+  if(g.done)showToast('♠  Quest complete! +'+XP_MAP[g.diff]+' XP earned!');
+}
+
+function deleteGoal(id){state.goals=state.goals.filter(function(g){return g.id!==id;});saveState();renderAll();}
+function deleteProject(id){state.projects=state.projects.filter(function(p){return p.id!==id;});state.goals.forEach(function(g){if(g.projectId===id)g.projectId=null;});saveState();renderAll();}
+
+/* ── Add goal (tab-aware) ── */
+function openAddGoal(tab){document.getElementById('goal-form-'+tab).classList.add('open');setTimeout(function(){var inp=document.getElementById('goal-title-'+tab);if(inp)inp.focus();},60);}
+function closeAddGoal(tab){document.getElementById('goal-form-'+tab).classList.remove('open');}
+
+function addGoal(tab){
+  var sfx=tab;
+  var title=document.getElementById('goal-title-'+sfx).value.trim();
+  if(!title){document.getElementById('goal-title-'+sfx).focus();return;}
+  var type=tab==='money'?'money':(tab==='normal'?'normal':(document.getElementById('goal-type-all').value));
+  var expiry=document.getElementById('goal-expiry-'+sfx).value||null;
+  var g={id:'g'+Date.now(),title:title,desc:document.getElementById('goal-desc-'+sfx).value.trim(),cat:document.getElementById('goal-cat-'+sfx)?document.getElementById('goal-cat-'+sfx).value:'other',diff:document.getElementById('goal-diff-'+sfx)?document.getElementById('goal-diff-'+sfx).value:'2',projectId:document.getElementById('goal-project-'+sfx)?document.getElementById('goal-project-'+sfx).value||null:null,type:type,expiry:expiry,done:false,created:Date.now()};
+  if(type==='money'){g.moneyTotal=parseFloat(document.getElementById('goal-money-total-'+sfx)?document.getElementById('goal-money-total-'+sfx).value:0)||0;g.moneyPaid=parseFloat(document.getElementById('goal-money-paid-'+sfx)?document.getElementById('goal-money-paid-'+sfx).value:0)||0;}
+  state.goals.unshift(g);
+  // reset
+  ['goal-title-','goal-desc-','goal-expiry-'].forEach(function(p){var el=document.getElementById(p+sfx);if(el)el.value='';});
+  ['goal-money-total-','goal-money-paid-'].forEach(function(p){var el=document.getElementById(p+sfx);if(el)el.value='';});
+  if(tab==='all'){document.getElementById('goal-type-all').value='normal';document.getElementById('money-fields-all').classList.remove('visible');}
+  closeAddGoal(tab);
+  saveState();renderAll();
+  showToast('✦  New quest added!');
+}
+
+/* ── Add project ── */
+function addProject(){
+  var name=document.getElementById('proj-name').value.trim();
+  if(!name){document.getElementById('proj-name').focus();return;}
+  var expiry=document.getElementById('proj-expiry').value||null;
+  var xpReward=parseInt(document.getElementById('proj-xp').value)||0;
+  state.projects.unshift({id:'p'+Date.now(),name:name,desc:document.getElementById('proj-desc').value.trim(),icon:document.getElementById('proj-icon').value.trim()||'🗺',expiry:expiry,xpReward:xpReward,completedXPGranted:false});
+  document.getElementById('proj-name').value='';document.getElementById('proj-desc').value='';
+  document.getElementById('proj-icon').value='';document.getElementById('proj-expiry').value='';
+  document.getElementById('proj-xp').value='';
+  toggleForm('project-form');saveState();renderAll();
+  showToast('✦  New project created!');
+}
+
+/* ── Edit quest ── */
+function openEdit(id){
+  var g=state.goals.find(function(x){return x.id===id;});if(!g)return;
+  editingId=id;refreshAllProjectSelects();
+  document.getElementById('edit-title').value=g.title;
+  document.getElementById('edit-desc').value=g.desc||'';
+  document.getElementById('edit-cat').value=g.cat;
+  document.getElementById('edit-diff').value=g.diff;
+  document.getElementById('edit-project').value=g.projectId||'';
+  document.getElementById('edit-type').value=g.type||'normal';
+  document.getElementById('edit-money-total').value=g.moneyTotal||'';
+  document.getElementById('edit-money-paid').value=g.moneyPaid||'';
+  document.getElementById('edit-expiry').value=expiryForInput(g.expiry);
+  toggleEditMoneyFields();
+  document.getElementById('edit-modal').classList.add('open');
+  setTimeout(function(){document.getElementById('edit-title').focus();},60);
+}
+function closeEdit(){editingId=null;document.getElementById('edit-modal').classList.remove('open');}
+function closeEditIfBg(e){if(e.target===document.getElementById('edit-modal'))closeEdit();}
+function toggleEditMoneyFields(){document.getElementById('edit-money-fields').classList.toggle('visible',document.getElementById('edit-type').value==='money');}
+function saveEdit(){
+  var g=state.goals.find(function(x){return x.id===editingId;});if(!g)return;
+  var title=document.getElementById('edit-title').value.trim();if(!title){document.getElementById('edit-title').focus();return;}
+  g.title=title;g.desc=document.getElementById('edit-desc').value.trim();
+  g.cat=document.getElementById('edit-cat').value;g.diff=document.getElementById('edit-diff').value;
+  g.projectId=document.getElementById('edit-project').value||null;
+  g.type=document.getElementById('edit-type').value;
+  g.expiry=document.getElementById('edit-expiry').value||null;
+  if(g.type==='money'){g.moneyTotal=parseFloat(document.getElementById('edit-money-total').value)||0;g.moneyPaid=parseFloat(document.getElementById('edit-money-paid').value)||0;}
+  else{delete g.moneyTotal;delete g.moneyPaid;}
+  closeEdit();saveState();renderAll();showToast('✦  Quest updated!');
+}
+
+/* ── Edit project ── */
+function openProjEdit(id){
+  var p=state.projects.find(function(x){return x.id===id;});if(!p)return;
+  editingProjId=id;
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-icon').value=p.icon||'';
+  document.getElementById('ep-desc').value=p.desc||'';
+  document.getElementById('ep-expiry').value=expiryForInput(p.expiry);
+  document.getElementById('ep-xp').value=p.xpReward||'';
+  document.getElementById('edit-proj-modal').classList.add('open');
+  setTimeout(function(){document.getElementById('ep-name').focus();},60);
+}
+function closeProjEdit(){editingProjId=null;document.getElementById('edit-proj-modal').classList.remove('open');}
+function closeProjEditIfBg(e){if(e.target===document.getElementById('edit-proj-modal'))closeProjEdit();}
+function saveProjEdit(){
+  var p=state.projects.find(function(x){return x.id===editingProjId;});if(!p)return;
+  var name=document.getElementById('ep-name').value.trim();if(!name){document.getElementById('ep-name').focus();return;}
+  p.name=name;p.icon=document.getElementById('ep-icon').value.trim()||'🗺';
+  p.desc=document.getElementById('ep-desc').value.trim();
+  p.expiry=document.getElementById('ep-expiry').value||null;
+  p.xpReward=parseInt(document.getElementById('ep-xp').value)||0;
+  closeProjEdit();saveState();renderAll();showToast('✦  Project updated!');
+}
+
+/* ── Lock system ── */
+function handleLockGoal(id){
+  var g=state.goals.find(function(x){return x.id===id;});if(!g)return;
+  if(isLocked(g)){g.locked=false;g.lockType=null;g.lockUntil=null;g.lockXP=null;saveState();renderAll();showToast('🔓 Quest unlocked!');return;}
+  lockingId=id;lockingType='goal';openLockModal('Lock quest: '+g.title);
+}
+function handleLockProject(id){
+  var p=state.projects.find(function(x){return x.id===id;});if(!p)return;
+  if(isLocked(p)){p.locked=false;p.lockType=null;p.lockUntil=null;p.lockXP=null;saveState();renderAll();showToast('🔓 Project unlocked!');return;}
+  lockingId=id;lockingType='project';openLockModal('Lock project: '+p.name);
+}
+function openLockModal(titleTxt){
+  lockOpt='none';
+  document.getElementById('lock-modal-title').textContent='🔒 '+titleTxt;
+  ['date','xp','none'].forEach(function(o){
+    document.getElementById('lopt-'+o).classList.remove('selected');
+    var sub=document.getElementById('lsub-'+o);if(sub)sub.classList.remove('visible');
+  });
+  document.getElementById('lock-date-val').value='';
+  document.getElementById('lock-xp-val').value='';
+  document.getElementById('lock-modal').classList.add('open');
+}
+function closeLockModal(){document.getElementById('lock-modal').classList.remove('open');lockingId=null;lockingType=null;}
+function closeLockIfBg(e){if(e.target===document.getElementById('lock-modal'))closeLockModal();}
+function selectLockOpt(opt){
+  lockOpt=opt;
+  ['date','xp','none'].forEach(function(o){
+    document.getElementById('lopt-'+o).classList.toggle('selected',o===opt);
+    var sub=document.getElementById('lsub-'+o);if(sub)sub.classList.toggle('visible',o===opt);
+  });
+}
+function confirmLock(){
+  if(!lockingId)return;
+  var item=lockingType==='goal'?state.goals.find(function(x){return x.id===lockingId;}):state.projects.find(function(x){return x.id===lockingId;});
+  if(!item)return;
+  item.locked=true;item.lockType=lockOpt;
+  item.lockUntil=lockOpt==='date'?(document.getElementById('lock-date-val').value||null):null;
+  item.lockXP=lockOpt==='xp'?(parseInt(document.getElementById('lock-xp-val').value)||null):null;
+  closeLockModal();saveState();renderAll();showToast('🔒 Locked!');
+}
+
+/* ── Form toggles ── */
+function toggleMoneyFields(sfx){document.getElementById('money-fields-'+sfx).classList.toggle('visible',document.getElementById('goal-type-'+sfx).value==='money');}
+function toggleForm(id){
+  var f=document.getElementById(id),wasOpen=f.classList.contains('open');
+  f.classList.toggle('open');
+  if(!wasOpen){var inp=f.querySelector('input[type="text"]');if(inp)setTimeout(function(){inp.focus();},60);}
+}
+
+/* ── Render projects ── */
+function renderProjects(){
+  var hideLocked=document.getElementById('chk-hide-locked-p').checked;
+  var onlyLocked=document.getElementById('chk-only-locked-p').checked;
+  var container=document.getElementById('projects-list');
+  var projs=state.projects.filter(function(p){
+    var locked=isLocked(p);
+    if(hideLocked&&locked)return false;
+    if(onlyLocked&&!locked)return false;
+    return true;
+  });
+  if(!projs.length){container.innerHTML='<div class="empty"><span class="empty-icon">🗺</span>No projects found.</div>';return;}
+  container.innerHTML=projs.map(function(p){
+    var locked=isLocked(p);
+    var pg=state.goals.filter(function(g){return g.projectId===p.id;});
+    var pd=pg.filter(function(g){return g.done;}).length;
+    var ppct=pg.length?Math.round(pd/pg.length*100):0;
+    var expClass=locked?'':cardExpiryClass(p.expiry);
+    var cdBadge=locked?'':countdownBadge(p.expiry);
+    var lkBadge=lockBadge(p,locked);
+    var xpBadge=p.xpReward?'<span class="xp-badge">🏆 +'+p.xpReward+' XP</span>':'';
+    var completedBadge=p.completedXPGranted?'<span class="countdown later">✓ XP granted</span>':'';
+    // Money cost from money quests in this project
+    var mCost=pg.filter(function(g){return g.type==='money';}).reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
+    var mPaid=pg.filter(function(g){return g.type==='money';}).reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
+    var moneyRow=mCost>0?'<div class="proj-money-row"><span class="proj-money-label">💰 Project cost</span><span class="proj-money-val">'+fmt(mPaid)+' / '+fmt(mCost)+'</span></div>':'';
+
+    // Full quest info
+    var goalsHtml='';
+    if(!pg.length){goalsHtml='<div style="font-size:13px;color:var(--ink-hint);font-style:italic;padding:6px 0;">No quests yet.</div>';}
+    else{
+      goalsHtml=pg.map(function(g){
+        var gLocked=isGoalEffectiveLocked(g);
+        var gIsMoney=g.type==='money';
+        var gMoneyBar='';
+        if(gIsMoney){var gt=parseFloat(g.moneyTotal)||0,gp2=parseFloat(g.moneyPaid)||0,ggp=gt>0?Math.min(100,Math.round(gp2/gt*100)):0;gMoneyBar='<div class="goal-money-bar-wrap" style="margin-top:6px;"><div class="goal-money-labels"><span>'+fmt(gp2)+' paid</span><span>'+fmt(gt)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+ggp+'%"></div></div></div>';}
+        return '<div class="pq-card'+(g.done?' done-pq':'')+(gLocked?' locked-pq':'')+'">'
+          +'<div class="pq-title">'+(g.done?'✓ ':gLocked?'🔒 ':'')+esc(g.title)+'</div>'
+          +(g.desc?'<div class="pq-desc">'+esc(g.desc)+'</div>':'')
+          +'<div class="pq-meta">'
+            +(gIsMoney?'<span class="tag tag-money">💰</span>':'<span class="tag tag-'+g.cat+'">'+g.cat+'</span>')
+            +'<span class="diff-stars">'+DIFF_STARS[g.diff]+'</span>'
+            +'<span class="xp-badge">+'+XP_MAP[g.diff]+' XP</span>'
+            +(gIsMoney?'<span class="money-badge">'+fmt(g.moneyTotal||0)+'</span>':'')
+            +(g.expiry&&!g.done&&!gLocked?countdownBadge(g.expiry):'')
+            +(gLocked?lockBadge(g,true):'')
+          +'</div>'
+          +gMoneyBar
+        +'</div>';
+      }).join('');
+    }
+
+    return '<div class="project-card'+(locked?' locked-proj':'')+expClass+'">'
+      +'<div class="project-head">'
+        +'<div class="project-emoji">'+(p.icon||'🗺')+'</div>'
+        +'<div class="project-info">'
+          +'<div class="project-name">'+esc(p.name)+'</div>'
+          +(p.desc?'<div class="project-desc">'+esc(p.desc)+'</div>':'')
+          +'<div class="project-meta">'+cdBadge+lkBadge+xpBadge+completedBadge+'</div>'
+          +'<div class="progress-wrap"><div class="progress-labels"><span>'+pd+'/'+pg.length+' quests</span><span>'+ppct+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>'
+          +moneyRow
+        +'</div>'
+        +'<div style="display:flex;gap:2px;flex-shrink:0;">'
+          +'<button class="icon-btn'+(locked?' lock-active':'')+'" onclick="handleLockProject(\''+p.id+'\')" title="'+(locked?'Unlock':'Lock')+'">'+(locked?'🔒':'🔓')+'</button>'
+          +'<button class="icon-btn" onclick="openProjEdit(\''+p.id+'\')" title="Edit">✎</button>'
+          +'<button class="icon-btn del" onclick="deleteProject(\''+p.id+'\')" title="Delete">✕</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="project-footer"><button class="toggle-goals-btn" onclick="toggleProjGoals(\''+p.id+'\',this)">Show quests ▸</button></div>'
+      +'<div class="project-goals" id="pg-'+p.id+'">'+goalsHtml+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function toggleProjGoals(id,btn){var el=document.getElementById('pg-'+id);el.classList.toggle('open');btn.textContent=el.classList.contains('open')?'Hide quests ▾':'Show quests ▸';}
+
+/* ── Stats ── */
+function renderStats(){
+  var activeGoals=state.goals.filter(function(g){return !isGoalEffectiveLocked(g);});
+  var activeProjects=state.projects.filter(function(p){return !isLocked(p);});
+  var total=activeGoals.length,done=activeGoals.filter(function(g){return g.done;}).length,pct=total?Math.round(done/total*100):0;
+  var xp=totalXP(),maxXP=activeGoals.reduce(function(s,g){return s+XP_MAP[g.diff];},0),xpPct=maxXP?Math.round(xp/maxXP*100):0;
+  var lv=getLevel(xp);
+  var mGoals=activeGoals.filter(function(g){return g.type==='money';});
+  var tt=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
+  var tp=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
+  var expiring=activeGoals.filter(function(g){return !g.done&&g.expiry&&daysUntil(g.expiry)<=7&&daysUntil(g.expiry)>=0;}).length;
+  var lockedCount=state.goals.filter(function(g){return isGoalEffectiveLocked(g);}).length+state.projects.filter(isLocked).length;
+  var projXPAvail=activeProjects.filter(function(p){return p.xpReward&&!p.completedXPGranted;}).reduce(function(s,p){return s+(p.xpReward||0);},0);
+  document.getElementById('bigPct').textContent=pct;
+  document.getElementById('bigPctSub').textContent=done+' of '+total+' quests completed';
+  document.getElementById('overview-tiles').innerHTML=
+    tile(pct+'%','Completion rate',done+' done, '+(total-done)+' remaining',pctClass(pct))+
+    tile(xpPct+'%','XP earned',xp+' of '+maxXP+' possible XP',pctClass(xpPct))+
+    tile(LEVELS[lv],'Current rank','Level '+(lv+1)+' of '+LEVELS.length,'')+
+    (mGoals.length?tile(fmt(tp),'Money paid',fmt(tp)+' of '+fmt(tt)+' total',pctClass(tt?Math.round(tp/tt*100):0)):'')+
+    (expiring?tile(expiring,'Expiring soon','quests due within 7 days','c-red'):'')+
+    (lockedCount?tile(lockedCount,'Locked','quests & projects locked',''):'')+
+    (projXPAvail?tile(projXPAvail,'Bonus XP available','complete projects to earn','c-amber'):'');
+  var projHtml=activeProjects.length?activeProjects.map(function(p){
+    var pg=activeGoals.filter(function(g){return g.projectId===p.id;}),pd=pg.filter(function(g){return g.done;}).length,ppct=pg.length?Math.round(pd/pg.length*100):0;
+    var cdBadge=countdownBadge(p.expiry);
+    var xpBadge=p.xpReward?'<span style="font-family:\'Cinzel\',serif;font-size:10px;color:var(--gold);margin-left:6px;">🏆 +'+p.xpReward+' XP</span>':'';
+    var mCost=pg.filter(function(g){return g.type==='money';}).reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
+    var mCostStr=mCost>0?'<span style="font-size:12px;color:var(--green);margin-left:6px;">💰 '+fmt(mCost)+'</span>':'';
+    return '<div class="proj-stat-row"><div class="proj-stat-header"><div class="proj-stat-name">'+(p.icon||'🗺')+' '+esc(p.name)+xpBadge+mCostStr+(cdBadge?' '+cdBadge:'')+'</div><div class="proj-stat-pct '+pctClass(ppct)+'">'+ppct+'%</div></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div><div style="font-size:12px;color:var(--ink-hint);margin-top:6px;font-style:italic;">'+pd+' of '+pg.length+' quests completed</div></div>';
+  }).join(''):'<div class="empty" style="padding:1rem 0;font-size:14px;">No active projects.</div>';
+  document.getElementById('project-stat-rows').innerHTML=projHtml;
+  document.getElementById('cat-stat-tiles').innerHTML=CATS.map(function(cat){
+    var cg=activeGoals.filter(function(g){return g.cat===cat;}),cd=cg.filter(function(g){return g.done;}).length,cpct=cg.length?Math.round(cd/cg.length*100):null;
+    return '<div class="cat-tile"><div class="cat-tile-pct '+(cpct!==null?pctClass(cpct):'')+'">'+(cpct!==null?cpct+'%':'—')+'</div><div><div class="cat-tile-name">'+cat+'</div><div class="cat-tile-count">'+cd+' / '+cg.length+'</div></div></div>';
+  }).join('');
+}
+
+function tile(val,label,sub,colorClass){return '<div class="stats-tile"><div class="stats-tile-val '+colorClass+'">'+val+'</div><div class="stats-tile-label">'+label+'</div><div class="stats-tile-sub">'+sub+'</div></div>';}
+
+/* ── Render everything ── */
+function renderAll(){
+  renderAllGoalTabs();
+  renderProjects();
+  renderStats();
+  updateHUD();
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  activeTab=tab;
+  if(tab==='stats')renderStats();
+}
+
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);}
+
+/* Data loaded from EMBEDDED_DATA on first visit, then from localStorage on every visit after */
+
+renderAll();
+updateBackupStatus();
+</script>
+</body>
+</html>
