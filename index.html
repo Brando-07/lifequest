@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LifeQuest</title>
+<title>Questa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <style>
@@ -275,6 +275,53 @@
   .btn-lock{font-family:'Cinzel',Georgia,serif;font-size:12px;font-weight:600;color:#fff;background:var(--purple-dim);border:1px solid var(--purple-dim);border-radius:var(--rad);padding:9px 20px;cursor:pointer;-webkit-appearance:none;letter-spacing:0.04em;-webkit-transition:opacity 0.15s;transition:opacity 0.15s;}
   .btn-lock:hover{opacity:0.85;}
 
+  /* ── Calendar payment filter (Stats tab) ── */
+  .cal-filter-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);padding:1.1rem 1.25rem;margin-bottom:1.5rem;box-shadow:var(--shadow-card);}
+  .cal-filter-title{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+  .cal-filter-row{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;flex-wrap:wrap;}
+  .cal-filter-row input[type="date"]{font-family:'Crimson Pro',Georgia,serif;font-size:14px;padding:7px 11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;appearance:none;outline:none;color-scheme:dark;flex:1;min-width:130px;}
+  .cal-filter-row input[type="date"]:focus{border-color:var(--gold-dim);}
+  .cal-filter-sep{font-size:12px;color:var(--ink-hint);flex-shrink:0;}
+  .cal-filter-btn{font-family:'Cinzel',Georgia,serif;font-size:11px;font-weight:600;color:var(--gold);border:1px solid var(--gold-dim);background:var(--surface3);border-radius:var(--rad);padding:7px 16px;cursor:pointer;-webkit-appearance:none;letter-spacing:0.04em;-webkit-transition:background 0.15s;transition:background 0.15s;}
+  .cal-filter-btn:hover{background:var(--surface4);}
+  .cal-results{margin-top:1rem;}
+  .cal-result-card{background:var(--surface3);border:1px solid var(--border);border-radius:var(--rad);padding:10px 14px;margin-bottom:8px;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;gap:8px;}
+  .cal-result-left{}
+  .cal-result-name{font-size:14px;font-weight:500;color:var(--ink);}
+  .cal-result-date{font-size:11px;color:var(--ink-hint);margin-top:2px;font-style:italic;}
+  .cal-result-right{text-align:right;flex-shrink:0;}
+  .cal-result-amt{font-family:'Cinzel',Georgia,serif;font-size:15px;font-weight:600;color:var(--green);}
+  .cal-result-paid{font-size:11px;color:var(--ink-hint);margin-top:2px;}
+  .cal-total-row{display:-webkit-box;display:flex;-webkit-box-pack:justify;justify-content:space-between;-webkit-box-align:center;align-items:center;padding:10px 14px;border-top:1px solid var(--border2);margin-top:4px;}
+  .cal-total-label{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--ink-hint);text-transform:uppercase;letter-spacing:0.08em;}
+  .cal-total-amt{font-family:'Cinzel',Georgia,serif;font-size:18px;font-weight:700;color:var(--gold);}
+
+  /* ── Monthly fixed expenses ── */
+  .monthly-exp-section{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rad-lg);margin-bottom:1.5rem;box-shadow:var(--shadow-card);overflow:hidden;}
+  .monthly-exp-header{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;padding:1rem 1.25rem;cursor:pointer;-webkit-user-select:none;user-select:none;}
+  .monthly-exp-header-left{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:10px;}
+  .monthly-exp-title{font-family:'Cinzel',Georgia,serif;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0.04em;}
+  .monthly-exp-total{font-family:'Cinzel',Georgia,serif;font-size:13px;color:var(--green);}
+  .monthly-exp-toggle{font-size:18px;color:var(--gold-dim);-webkit-transition:-webkit-transform 0.25s;transition:transform 0.25s;line-height:1;}
+  .monthly-exp-toggle.open{-webkit-transform:rotate(45deg);transform:rotate(45deg);}
+  .monthly-exp-body{display:none;border-top:1px solid var(--border);padding:1rem 1.25rem;}
+  .monthly-exp-body.open{display:block;}
+  .exp-list{margin-bottom:12px;}
+  .exp-item{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:justify;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+  .exp-item:last-child{border-bottom:none;}
+  .exp-item-left{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;}
+  .exp-item-name{font-size:14px;color:var(--ink);}
+  .exp-item-cat{font-size:10px;color:var(--ink-hint);font-style:italic;}
+  .exp-item-right{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;flex-shrink:0;}
+  .exp-item-amt{font-family:'Cinzel',Georgia,serif;font-size:14px;font-weight:600;color:var(--green);}
+  .exp-del-btn{width:24px;height:24px;border:none;background:none;color:var(--ink-hint);cursor:pointer;border-radius:var(--rad);-webkit-appearance:none;font-size:14px;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;-webkit-transition:color 0.15s;transition:color 0.15s;}
+  .exp-del-btn:hover{color:var(--red);}
+  .exp-add-row{display:-webkit-box;display:flex;gap:7px;flex-wrap:wrap;-webkit-box-align:flex-end;align-items:flex-end;}
+  .exp-add-input{font-family:'Crimson Pro',Georgia,serif;font-size:14px;padding:8px 11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;appearance:none;outline:none;flex:1;min-width:100px;}
+  .exp-add-input:focus{border-color:var(--gold-dim);}
+  .exp-add-btn{font-family:'Cinzel',Georgia,serif;font-size:11px;font-weight:600;color:#1A1812;background:var(--gold);border:none;border-radius:var(--rad);padding:8px 16px;cursor:pointer;-webkit-appearance:none;white-space:nowrap;}
+  .exp-empty{font-size:13px;color:var(--ink-hint);font-style:italic;padding:8px 0;}
+
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;-webkit-transform:translateX(-50%) translateY(80px);transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--gold-dim);border-radius:var(--rad-lg);padding:11px 24px;font-family:'Cinzel',Georgia,serif;font-size:13px;color:var(--gold);box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;-webkit-transition:-webkit-transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;transition:transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;opacity:0;white-space:nowrap;pointer-events:none;}
   .toast.show{-webkit-transform:translateX(-50%) translateY(0);transform:translateX(-50%) translateY(0);opacity:1;}
@@ -285,7 +332,7 @@
 
   <!-- Header -->
   <div class="header">
-    <div class="brand-title"><span class="brand-spade">♠</span> LifeQuest</div>
+    <div class="brand-title"><span class="brand-spade">♠</span> Questa</div>
     <div class="hud">
       <div class="hud-info">
         <div class="hud-level" id="levelLabel">Novice · Lv 1</div>
@@ -510,6 +557,40 @@
 
   <!-- ═══ STATS TAB ═══ -->
   <div class="section" id="tab-stats">
+
+    <!-- Monthly fixed expenses -->
+    <div class="monthly-exp-section" id="monthly-exp-section">
+      <div class="monthly-exp-header" onclick="toggleMonthlyExp()">
+        <div class="monthly-exp-header-left">
+          <span style="font-size:18px;">📅</span>
+          <span class="monthly-exp-title">Monatliche Ausgaben</span>
+          <span class="monthly-exp-total" id="monthly-exp-total"></span>
+        </div>
+        <span class="monthly-exp-toggle" id="monthly-exp-toggle">＋</span>
+      </div>
+      <div class="monthly-exp-body" id="monthly-exp-body">
+        <div class="exp-list" id="exp-list"></div>
+        <div class="exp-add-row">
+          <input class="exp-add-input" type="text" id="exp-name" placeholder="Bezeichnung (z.B. Miete)…" style="flex:2;" />
+          <input class="exp-add-input" type="number" id="exp-amt" placeholder="€ Betrag" min="0" step="0.01" style="max-width:110px;" />
+          <input class="exp-add-input" type="text" id="exp-cat" placeholder="Kategorie" style="max-width:110px;" />
+          <button class="exp-add-btn" onclick="addExpense()">＋ Hinzufügen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar payment filter -->
+    <div class="cal-filter-wrap">
+      <div class="cal-filter-title">📆 Zahlungen bis Datum anzeigen</div>
+      <div class="cal-filter-row">
+        <input type="date" id="cal-from" />
+        <span class="cal-filter-sep">→</span>
+        <input type="date" id="cal-to" />
+        <button class="cal-filter-btn" onclick="runCalFilter()">Anzeigen</button>
+      </div>
+      <div class="cal-results" id="cal-results"></div>
+    </div>
+
     <div class="big-pct-wrap">
       <div><span class="big-pct-number" id="bigPct">0</span><span class="big-pct-symbol">%</span></div>
       <div class="big-pct-label">Overall Completion</div>
@@ -1196,6 +1277,121 @@ function switchTab(tab,btn){
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);}
 
 /* Data loaded from EMBEDDED_DATA on first visit, then from localStorage on every visit after */
+
+/* ════════ MONTHLY FIXED EXPENSES ════════ */
+function loadExpenses(){
+  try{var r=localStorage.getItem('questa_expenses');if(r)return JSON.parse(r);}catch(e){}
+  return[];
+}
+function saveExpenses(list){try{localStorage.setItem('questa_expenses',JSON.stringify(list));}catch(e){}}
+
+var expenses=loadExpenses();
+
+function toggleMonthlyExp(){
+  var body=document.getElementById('monthly-exp-body');
+  var tog=document.getElementById('monthly-exp-toggle');
+  var open=body.classList.toggle('open');
+  tog.classList.toggle('open',open);
+  if(open)renderExpenses();
+}
+
+function renderExpenses(){
+  var list=document.getElementById('exp-list');
+  var total=expenses.reduce(function(s,e){return s+(parseFloat(e.amt)||0);},0);
+  document.getElementById('monthly-exp-total').textContent=expenses.length?'— '+fmt(total)+' / Monat':'';
+  if(!expenses.length){list.innerHTML='<div class="exp-empty">Noch keine Ausgaben. Füge deine festen monatlichen Kosten hinzu.</div>';return;}
+  list.innerHTML=expenses.map(function(e,i){
+    return '<div class="exp-item">'
+      +'<div class="exp-item-left">'
+        +'<div>'
+          +'<div class="exp-item-name">'+esc(e.name)+'</div>'
+          +(e.cat?'<div class="exp-item-cat">'+esc(e.cat)+'</div>':'')
+        +'</div>'
+      +'</div>'
+      +'<div class="exp-item-right">'
+        +'<span class="exp-item-amt">'+fmt(e.amt)+'</span>'
+        +'<button class="exp-del-btn" onclick="deleteExpense('+i+')" title="Entfernen">✕</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function addExpense(){
+  var name=document.getElementById('exp-name').value.trim();
+  var amt=parseFloat(document.getElementById('exp-amt').value);
+  var cat=document.getElementById('exp-cat').value.trim();
+  if(!name||isNaN(amt)||amt<=0){showToast('⚠ Bitte Name und Betrag eingeben.');return;}
+  expenses.push({name:name,amt:amt,cat:cat});
+  saveExpenses(expenses);
+  document.getElementById('exp-name').value='';
+  document.getElementById('exp-amt').value='';
+  document.getElementById('exp-cat').value='';
+  renderExpenses();
+  showToast('✦ Ausgabe hinzugefügt!');
+}
+
+function deleteExpense(i){
+  expenses.splice(i,1);
+  saveExpenses(expenses);
+  renderExpenses();
+}
+
+/* ════════ CALENDAR PAYMENT FILTER ════════ */
+function runCalFilter(){
+  var fromVal=document.getElementById('cal-from').value;
+  var toVal=document.getElementById('cal-to').value;
+  var container=document.getElementById('cal-results');
+  if(!toVal){showToast('⚠ Bitte mindestens ein Enddatum wählen.');return;}
+  var from=fromVal?new Date(fromVal):new Date();
+  from.setHours(0,0,0,0);
+  var to=new Date(toVal);
+  to.setHours(23,59,59,999);
+
+  // Collect money quests with expiry in range that are not done and not locked
+  var matches=state.goals.filter(function(g){
+    if(g.type!=='money'||g.done||isGoalEffectiveLocked(g))return false;
+    if(!g.expiry)return false;
+    var d=new Date(g.expiry);d.setHours(12,0,0,0);
+    return d>=from&&d<=to;
+  });
+
+  // Sort by expiry ascending
+  matches.sort(function(a,b){return new Date(a.expiry)-new Date(b.expiry);});
+
+  if(!matches.length){
+    container.innerHTML='<div style="font-size:13px;color:var(--ink-hint);font-style:italic;padding:8px 0;">Keine ausstehenden Zahlungen im gewählten Zeitraum.</div>';
+    return;
+  }
+
+  var totalAmt=matches.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
+  var totalPaid=matches.reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
+  var totalLeft=totalAmt-totalPaid;
+
+  var html=matches.map(function(g){
+    var amt=parseFloat(g.moneyTotal)||0;
+    var paid=parseFloat(g.moneyPaid)||0;
+    var left=amt-paid;
+    var proj=g.projectId?state.projects.find(function(p){return p.id===g.projectId;}):null;
+    var dateStr=new Date(g.expiry).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    return '<div class="cal-result-card">'
+      +'<div class="cal-result-left">'
+        +'<div class="cal-result-name">'+esc(g.title)+(proj?' <span style="font-size:10px;color:var(--ink-hint);">📁'+esc(proj.name)+'</span>':'')+'</div>'
+        +'<div class="cal-result-date">⏳ Fällig: '+dateStr+'</div>'
+      +'</div>'
+      +'<div class="cal-result-right">'
+        +'<div class="cal-result-amt">'+fmt(left)+' offen</div>'
+        +(paid>0?'<div class="cal-result-paid">'+fmt(paid)+' bereits bezahlt</div>':'')
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  html+='<div class="cal-total-row">'
+    +'<span class="cal-total-label">Gesamt offen</span>'
+    +'<span class="cal-total-amt">'+fmt(totalLeft)+'</span>'
+    +'</div>';
+
+  container.innerHTML=html;
+}
 
 renderAll();
 updateBackupStatus();
