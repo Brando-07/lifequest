@@ -210,6 +210,16 @@
   .pq-desc{font-size:12px;color:var(--ink-soft);font-style:italic;margin-bottom:6px;}
   .pq-meta{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:6px;flex-wrap:wrap;}
 
+  /* Raten (installment) inputs */
+  .raten-input-row{display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+  .raten-input-row label{font-size:11px;color:var(--ink-hint);white-space:nowrap;min-width:60px;}
+  .raten-input-row input{font-family:'Crimson Pro',Georgia,serif;font-size:14px;padding:6px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;outline:none;width:110px;}
+  .raten-input-row input:focus{border-color:var(--gold-dim);}
+  /* monthly-fields toggle utility (also used for raten) */
+  .monthly-fields{display:none;}
+  .monthly-fields.visible{display:block;}
+  .monthly-note{font-size:11px;color:var(--ink-hint);font-style:italic;margin-top:2px;padding:5px 10px;background:var(--surface3);border-radius:var(--rad);border:1px solid var(--border);}
+
   /* Stats tab */
   .big-pct-wrap{text-align:center;padding:2.5rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem;}
   .big-pct-number{font-family:'Cinzel',Georgia,serif;font-size:108px;font-weight:700;color:var(--gold);line-height:1;letter-spacing:-0.02em;}
@@ -424,6 +434,17 @@
           <div class="money-field-group"><label>Total to pay (€)</label><input type="number" id="goal-money-total-all" placeholder="e.g. 500" min="0" step="0.01" /></div>
           <div class="money-field-group"><label>Already paid (€)</label><input type="number" id="goal-money-paid-all" placeholder="e.g. 0" min="0" step="0.01" /></div>
         </div>
+        <!-- Raten -->
+        <div class="form-row" style="margin-bottom:4px;">
+          <label class="chk-label" style="font-size:12px;gap:8px;color:var(--ink-soft);"><input type="checkbox" id="goal-use-raten-all" onchange="toggleRatenFields('all')" style="width:14px;height:14px;accent-color:var(--gold);" /> Ratenzahlung (eigene Raten)</label>
+        </div>
+        <div class="monthly-fields" id="raten-fields-all">
+          <div class="money-row" style="margin-bottom:4px;">
+            <div class="money-field-group"><label>Anzahl der Raten</label><input type="number" id="goal-raten-count-all" placeholder="z.B. 3" min="1" step="1" oninput="buildRatenInputs('all')" /></div>
+          </div>
+          <div id="raten-inputs-all" style="margin-bottom:6px;"></div>
+          <div class="monthly-note" id="raten-total-note-all">💡 Gesamtbetrag wird aus den Raten berechnet.</div>
+        </div>
       </div>
       <div class="form-row" style="margin-bottom:10px;"><div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="goal-expiry-all" style="width:100%;" /></div></div>
       <textarea id="goal-desc-all" placeholder="Describe your quest… (optional)"></textarea>
@@ -519,9 +540,20 @@
         <select id="goal-cat-money"><option value="health">Health</option><option value="career">Career</option><option value="personal">Personal</option><option value="finance">Finance</option><option value="creative">Creative</option><option value="other">Other</option></select>
         <select id="goal-diff-money"><option value="1">Easy — +20 XP</option><option value="2">Medium — +50 XP</option><option value="3">Hard — +100 XP</option><option value="4">Legendary — +200 XP</option></select>
       </div>
-      <div class="money-row" style="margin-bottom:10px;">
+      <div class="money-row" style="margin-bottom:6px;">
         <div class="money-field-group"><label>Total to pay (€)</label><input type="number" id="goal-money-total-money" placeholder="e.g. 500" min="0" step="0.01" /></div>
         <div class="money-field-group"><label>Already paid (€)</label><input type="number" id="goal-money-paid-money" placeholder="e.g. 0" min="0" step="0.01" /></div>
+      </div>
+      <!-- Raten / custom installments -->
+      <div class="form-row" style="margin-bottom:4px;">
+        <label class="chk-label" style="font-size:12px;gap:8px;color:var(--ink-soft);"><input type="checkbox" id="goal-use-raten-money" onchange="toggleRatenFields('money')" style="width:14px;height:14px;accent-color:var(--gold);" /> Ratenzahlung (eigene Raten)</label>
+      </div>
+      <div class="monthly-fields" id="raten-fields-money">
+        <div class="money-row" style="margin-bottom:4px;">
+          <div class="money-field-group"><label>Anzahl der Raten</label><input type="number" id="goal-raten-count-money" placeholder="z.B. 3" min="1" step="1" oninput="buildRatenInputs('money')" /></div>
+        </div>
+        <div id="raten-inputs-money" style="margin-bottom:6px;"></div>
+        <div class="monthly-note" id="raten-total-note-money">💡 Gesamtbetrag wird aus den Raten berechnet.</div>
       </div>
       <div class="form-row" style="margin-bottom:10px;"><div style="flex:1;"><span class="form-field-label">Expiration date (optional)</span><input type="date" id="goal-expiry-money" style="width:100%;" /></div></div>
       <textarea id="goal-desc-money" placeholder="Describe your quest… (optional)"></textarea>
@@ -588,6 +620,10 @@
         <input type="date" id="cal-to" />
         <button class="cal-filter-btn" onclick="runCalFilter()">Anzeigen</button>
       </div>
+      <div class="filter-row" style="margin-top:10px;margin-bottom:0;">
+        <label class="chk-label"><input type="checkbox" id="cal-include-locked" /> Gesperrte einschließen</label>
+        <label class="chk-label"><input type="checkbox" id="cal-include-monthly" checked /> Monatliche Ausgaben einschließen</label>
+      </div>
       <div class="cal-results" id="cal-results"></div>
     </div>
 
@@ -595,6 +631,9 @@
       <div><span class="big-pct-number" id="bigPct">0</span><span class="big-pct-symbol">%</span></div>
       <div class="big-pct-label">Overall Completion</div>
       <div class="big-pct-sub" id="bigPctSub">0 of 0 quests completed</div>
+    </div>
+    <div class="filter-row" style="margin-bottom:1rem;">
+      <label class="chk-label"><input type="checkbox" id="stats-include-locked" onchange="renderStats()" /> Gesperrte Summen in Stats einschließen</label>
     </div>
     <div class="stats-section-title">Overview</div>
     <div class="stats-grid" id="overview-tiles"></div>
@@ -621,6 +660,17 @@
       <div class="modal-row">
         <div><span class="modal-label">Total to pay (€)</span><input type="number" id="edit-money-total" placeholder="500" min="0" step="0.01" /></div>
         <div><span class="modal-label">Already paid (€)</span><input type="number" id="edit-money-paid" placeholder="0" min="0" step="0.01" /></div>
+      </div>
+      <!-- Raten in edit -->
+      <div style="margin-bottom:6px;">
+        <label class="chk-label" style="font-size:12px;gap:8px;color:var(--ink-soft);"><input type="checkbox" id="edit-use-raten" onchange="toggleRatenFields('edit')" style="width:14px;height:14px;accent-color:var(--gold);" /> Ratenzahlung (eigene Raten)</label>
+      </div>
+      <div class="monthly-fields" id="raten-fields-edit">
+        <div class="modal-row" style="margin-bottom:4px;">
+          <div><span class="modal-label">Anzahl der Raten</span><input type="number" id="goal-raten-count-edit" placeholder="z.B. 3" min="1" step="1" oninput="buildRatenInputs('edit')" /></div>
+        </div>
+        <div id="raten-inputs-edit" style="margin-bottom:6px;"></div>
+        <div class="monthly-note" id="raten-total-note-edit">💡 Gesamtbetrag wird aus den Raten berechnet.</div>
       </div>
     </div>
     <span class="modal-label">Expiration date (optional)</span>
@@ -914,7 +964,11 @@ function questCardHTML(g){
   var moneyBar='',payRow='';
   if(isMoney&&!eLocked){
     var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
-    moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' paid</span><span>'+fmt(t)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div></div>';
+    var ratenHtml='';
+    if(g.raten&&g.raten.length){
+      ratenHtml='<div style="font-size:10px;color:var(--ink-hint);margin-top:4px;">Raten: '+g.raten.map(function(r,i){return '<span style="margin-right:4px;">'+(i+1)+'. '+fmt(r)+'</span>';}).join('')+'</div>';
+    }
+    moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' paid</span><span>'+fmt(t)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div>'+ratenHtml+'</div>';
     if(!g.done)payRow='<div class="pay-row"><input class="pay-input" type="number" id="pay-'+g.id+'" placeholder="Amount (€)" min="0" step="0.01" /><button class="pay-btn" onclick="addPayment(\''+g.id+'\')">Pay ✦</button></div>';
   }
   var expClass=g.done||eLocked?'':cardExpiryClass(g.expiry);
@@ -992,12 +1046,86 @@ function addPayment(id){
 function toggleGoal(id){
   var g=state.goals.find(function(x){return x.id===id;});if(!g||isGoalEffectiveLocked(g))return;
   g.done=!g.done;
+  // When marking a money quest as done, auto-pay remaining balance
+  if(g.done&&g.type==='money'){
+    var total=parseFloat(g.moneyTotal)||0;
+    var paid=parseFloat(g.moneyPaid)||0;
+    if(paid<total){g.moneyPaid=total;}
+  }
   saveState();renderAll();
   if(g.done)showToast('♠  Quest complete! +'+XP_MAP[g.diff]+' XP earned!');
 }
 
 function deleteGoal(id){state.goals=state.goals.filter(function(g){return g.id!==id;});saveState();renderAll();}
 function deleteProject(id){state.projects=state.projects.filter(function(p){return p.id!==id;});state.goals.forEach(function(g){if(g.projectId===id)g.projectId=null;});saveState();renderAll();}
+
+/* ── Raten (custom installments) ── */
+function toggleRatenFields(sfx){
+  var chk=document.getElementById('goal-use-raten-'+sfx)||document.getElementById('edit-use-raten');
+  var fields=document.getElementById('raten-fields-'+sfx);
+  if(!chk||!fields)return;
+  fields.classList.toggle('visible',chk.checked);
+  if(chk.checked){buildRatenInputs(sfx);}
+}
+
+function buildRatenInputs(sfx){
+  var countEl=document.getElementById('goal-raten-count-'+sfx);
+  if(!countEl)return;
+  var count=parseInt(countEl.value)||0;
+  var container=document.getElementById('raten-inputs-'+sfx);
+  if(!container)return;
+  if(count<1||count>24){container.innerHTML='';return;}
+  var rows='';
+  for(var i=1;i<=count;i++){
+    rows+='<div class="raten-input-row"><label>Rate '+i+'</label><input type="number" id="raten-amt-'+sfx+'-'+i+'" placeholder="€" min="0" step="0.01" oninput="updateRatenTotal(\''+sfx+'\')" /></div>';
+  }
+  container.innerHTML=rows;
+  updateRatenTotal(sfx);
+}
+
+function updateRatenTotal(sfx){
+  var countEl=document.getElementById('goal-raten-count-'+sfx);
+  if(!countEl)return;
+  var count=parseInt(countEl.value)||0;
+  var total=0;
+  for(var i=1;i<=count;i++){
+    var inp=document.getElementById('raten-amt-'+sfx+'-'+i);
+    if(inp)total+=parseFloat(inp.value)||0;
+  }
+  var note=document.getElementById('raten-total-note-'+sfx);
+  if(note)note.textContent='💡 Gesamtbetrag aus Raten: '+fmt(total);
+  // Also populate the total field
+  var totalField=document.getElementById('goal-money-total-'+sfx)||document.getElementById('edit-money-total');
+  if(totalField)totalField.value=total.toFixed(2);
+}
+
+function getRatenTotal(sfx){
+  var countEl=document.getElementById('goal-raten-count-'+sfx);
+  if(!countEl)return null;
+  var useRaten=document.getElementById('goal-use-raten-'+sfx)||document.getElementById('edit-use-raten');
+  if(!useRaten||!useRaten.checked)return null;
+  var count=parseInt(countEl.value)||0;
+  var raten=[];
+  var total=0;
+  for(var i=1;i<=count;i++){
+    var inp=document.getElementById('raten-amt-'+sfx+'-'+i);
+    var amt=parseFloat(inp?inp.value:0)||0;
+    raten.push(amt);
+    total+=amt;
+  }
+  return{total:parseFloat(total.toFixed(2)),raten:raten};
+}
+
+function resetRatenForm(sfx){
+  var chk=document.getElementById('goal-use-raten-'+sfx)||document.getElementById('edit-use-raten');
+  if(chk)chk.checked=false;
+  var fields=document.getElementById('raten-fields-'+sfx);
+  if(fields)fields.classList.remove('visible');
+  var countEl=document.getElementById('goal-raten-count-'+sfx);
+  if(countEl)countEl.value='';
+  var container=document.getElementById('raten-inputs-'+sfx);
+  if(container)container.innerHTML='';
+}
 
 /* ── Add goal (tab-aware) ── */
 function openAddGoal(tab){document.getElementById('goal-form-'+tab).classList.add('open');setTimeout(function(){var inp=document.getElementById('goal-title-'+tab);if(inp)inp.focus();},60);}
@@ -1010,11 +1138,21 @@ function addGoal(tab){
   var type=tab==='money'?'money':(tab==='normal'?'normal':(document.getElementById('goal-type-all').value));
   var expiry=document.getElementById('goal-expiry-'+sfx).value||null;
   var g={id:'g'+Date.now(),title:title,desc:document.getElementById('goal-desc-'+sfx).value.trim(),cat:document.getElementById('goal-cat-'+sfx)?document.getElementById('goal-cat-'+sfx).value:'other',diff:document.getElementById('goal-diff-'+sfx)?document.getElementById('goal-diff-'+sfx).value:'2',projectId:document.getElementById('goal-project-'+sfx)?document.getElementById('goal-project-'+sfx).value||null:null,type:type,expiry:expiry,done:false,created:Date.now()};
-  if(type==='money'){g.moneyTotal=parseFloat(document.getElementById('goal-money-total-'+sfx)?document.getElementById('goal-money-total-'+sfx).value:0)||0;g.moneyPaid=parseFloat(document.getElementById('goal-money-paid-'+sfx)?document.getElementById('goal-money-paid-'+sfx).value:0)||0;}
+  if(type==='money'){
+    var ratenData=getRatenTotal(sfx);
+    if(ratenData){
+      g.moneyTotal=ratenData.total;
+      g.raten=ratenData.raten;
+    } else {
+      g.moneyTotal=parseFloat(document.getElementById('goal-money-total-'+sfx)?document.getElementById('goal-money-total-'+sfx).value:0)||0;
+    }
+    g.moneyPaid=parseFloat(document.getElementById('goal-money-paid-'+sfx)?document.getElementById('goal-money-paid-'+sfx).value:0)||0;
+  }
   state.goals.unshift(g);
   // reset
   ['goal-title-','goal-desc-','goal-expiry-'].forEach(function(p){var el=document.getElementById(p+sfx);if(el)el.value='';});
   ['goal-money-total-','goal-money-paid-'].forEach(function(p){var el=document.getElementById(p+sfx);if(el)el.value='';});
+  resetRatenForm(sfx);
   if(tab==='all'){document.getElementById('goal-type-all').value='normal';document.getElementById('money-fields-all').classList.remove('visible');}
   closeAddGoal(tab);
   saveState();renderAll();
@@ -1063,8 +1201,20 @@ function saveEdit(){
   g.projectId=document.getElementById('edit-project').value||null;
   g.type=document.getElementById('edit-type').value;
   g.expiry=document.getElementById('edit-expiry').value||null;
-  if(g.type==='money'){g.moneyTotal=parseFloat(document.getElementById('edit-money-total').value)||0;g.moneyPaid=parseFloat(document.getElementById('edit-money-paid').value)||0;}
-  else{delete g.moneyTotal;delete g.moneyPaid;}
+  if(g.type==='money'){
+    var ratenData=getRatenTotal('edit');
+    if(ratenData){
+      g.moneyTotal=ratenData.total;
+      g.raten=ratenData.raten;
+    } else {
+      g.moneyTotal=parseFloat(document.getElementById('edit-money-total').value)||0;
+      delete g.raten;
+    }
+    g.moneyPaid=parseFloat(document.getElementById('edit-money-paid').value)||0;
+  } else {
+    delete g.moneyTotal;delete g.moneyPaid;delete g.raten;
+  }
+  resetRatenForm('edit');
   closeEdit();saveState();renderAll();showToast('✦  Quest updated!');
 }
 
@@ -1219,8 +1369,9 @@ function toggleProjGoals(id,btn){var el=document.getElementById('pg-'+id);el.cla
 
 /* ── Stats ── */
 function renderStats(){
-  var activeGoals=state.goals.filter(function(g){return !isGoalEffectiveLocked(g);});
-  var activeProjects=state.projects.filter(function(p){return !isLocked(p);});
+  var includeLocked=document.getElementById('stats-include-locked')&&document.getElementById('stats-include-locked').checked;
+  var activeGoals=state.goals.filter(function(g){return includeLocked||!isGoalEffectiveLocked(g);});
+  var activeProjects=state.projects.filter(function(p){return includeLocked||!isLocked(p);});
   var total=activeGoals.length,done=activeGoals.filter(function(g){return g.done;}).length,pct=total?Math.round(done/total*100):0;
   var xp=totalXP(),maxXP=activeGoals.reduce(function(s,g){return s+XP_MAP[g.diff];},0),xpPct=maxXP?Math.round(xp/maxXP*100):0;
   var lv=getLevel(xp);
@@ -1342,52 +1493,93 @@ function runCalFilter(){
   var toVal=document.getElementById('cal-to').value;
   var container=document.getElementById('cal-results');
   if(!toVal){showToast('⚠ Bitte mindestens ein Enddatum wählen.');return;}
+
+  var includeLocked=document.getElementById('cal-include-locked')&&document.getElementById('cal-include-locked').checked;
+  var includeMonthly=document.getElementById('cal-include-monthly')&&document.getElementById('cal-include-monthly').checked;
+
   var from=fromVal?new Date(fromVal):new Date();
   from.setHours(0,0,0,0);
   var to=new Date(toVal);
   to.setHours(23,59,59,999);
 
-  // Collect money quests with expiry in range that are not done and not locked
+  // Only unfinished money quests whose expiry falls in range
+  // Show only the REMAINING balance (moneyTotal - moneyPaid), skipping fully paid ones
   var matches=state.goals.filter(function(g){
-    if(g.type!=='money'||g.done||isGoalEffectiveLocked(g))return false;
+    if(g.type!=='money'||g.done)return false;
+    if(!includeLocked&&isGoalEffectiveLocked(g))return false;
     if(!g.expiry)return false;
     var d=new Date(g.expiry);d.setHours(12,0,0,0);
     return d>=from&&d<=to;
   });
-
-  // Sort by expiry ascending
   matches.sort(function(a,b){return new Date(a.expiry)-new Date(b.expiry);});
 
-  if(!matches.length){
+  // Only keep quests that still have something left to pay
+  var withBalance=matches.filter(function(g){
+    return ((parseFloat(g.moneyTotal)||0)-(parseFloat(g.moneyPaid)||0))>0;
+  });
+
+  // Total still owed from quests
+  var questLeft=withBalance.reduce(function(s,g){
+    return s+((parseFloat(g.moneyTotal)||0)-(parseFloat(g.moneyPaid)||0));
+  },0);
+
+  // Monatliche Ausgaben: calculate how many full months fall in range, show as single entity
+  var expTotal=0;
+  var numMonths=0;
+  if(includeMonthly&&expenses.length){
+    var fromM=new Date(from);fromM.setDate(1);
+    var toM=new Date(to);toM.setDate(1);
+    numMonths=Math.max(1,(toM.getFullYear()-fromM.getFullYear())*12+(toM.getMonth()-fromM.getMonth())+1);
+    var perMonth=expenses.reduce(function(s,e){return s+(parseFloat(e.amt)||0);},0);
+    expTotal=parseFloat((perMonth*numMonths).toFixed(2));
+  }
+
+  var grandTotal=questLeft+expTotal;
+
+  if(!withBalance.length&&!expTotal){
     container.innerHTML='<div style="font-size:13px;color:var(--ink-hint);font-style:italic;padding:8px 0;">Keine ausstehenden Zahlungen im gewählten Zeitraum.</div>';
     return;
   }
 
-  var totalAmt=matches.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
-  var totalPaid=matches.reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
-  var totalLeft=totalAmt-totalPaid;
-
-  var html=matches.map(function(g){
+  // Build quest rows — only show "noch offen" (remaining)
+  var html=withBalance.map(function(g){
     var amt=parseFloat(g.moneyTotal)||0;
     var paid=parseFloat(g.moneyPaid)||0;
     var left=amt-paid;
     var proj=g.projectId?state.projects.find(function(p){return p.id===g.projectId;}):null;
     var dateStr=new Date(g.expiry).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    var lockedNote=isGoalEffectiveLocked(g)?'<span style="font-size:10px;color:var(--purple);"> 🔒</span>':'';
+    var ratenNote=g.raten&&g.raten.length?'<div style="font-size:10px;color:var(--ink-hint);margin-top:2px;">Raten: '+g.raten.map(function(r){return fmt(r);}).join(' + ')+'</div>':'';
     return '<div class="cal-result-card">'
       +'<div class="cal-result-left">'
-        +'<div class="cal-result-name">'+esc(g.title)+(proj?' <span style="font-size:10px;color:var(--ink-hint);">📁'+esc(proj.name)+'</span>':'')+'</div>'
+        +'<div class="cal-result-name">'+esc(g.title)+lockedNote+(proj?' <span style="font-size:10px;color:var(--ink-hint);">📁 '+esc(proj.name)+'</span>':'')+'</div>'
         +'<div class="cal-result-date">⏳ Fällig: '+dateStr+'</div>'
+        +ratenNote
       +'</div>'
       +'<div class="cal-result-right">'
-        +'<div class="cal-result-amt">'+fmt(left)+' offen</div>'
-        +(paid>0?'<div class="cal-result-paid">'+fmt(paid)+' bereits bezahlt</div>':'')
+        +'<div class="cal-result-amt">'+fmt(left)+' noch offen</div>'
+        +(paid>0?'<div class="cal-result-paid" style="font-size:10px;color:var(--ink-hint);">'+fmt(paid)+' bereits bezahlt</div>':'')
       +'</div>'
     +'</div>';
   }).join('');
 
+  // Monatliche Ausgaben as single entity
+  if(includeMonthly&&expTotal>0){
+    var perMonth2=expenses.reduce(function(s,e){return s+(parseFloat(e.amt)||0);},0);
+    html+='<div class="cal-result-card" style="border-left:3px solid var(--gold-dim);">'
+      +'<div class="cal-result-left">'
+        +'<div class="cal-result-name">📅 Monatliche Ausgaben</div>'
+        +'<div class="cal-result-date">'+fmt(perMonth2)+' × '+numMonths+' Monat'+(numMonths>1?'e':'')+'</div>'
+      +'</div>'
+      +'<div class="cal-result-right">'
+        +'<div class="cal-result-amt">'+fmt(expTotal)+'</div>'
+      +'</div>'
+    +'</div>';
+  }
+
   html+='<div class="cal-total-row">'
-    +'<span class="cal-total-label">Gesamt offen</span>'
-    +'<span class="cal-total-amt">'+fmt(totalLeft)+'</span>'
+    +'<span class="cal-total-label">Gesamt noch zu zahlen</span>'
+    +'<span class="cal-total-amt">'+fmt(grandTotal)+'</span>'
     +'</div>';
 
   container.innerHTML=html;
