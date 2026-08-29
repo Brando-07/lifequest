@@ -966,7 +966,14 @@ function questCardHTML(g){
     var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
     var ratenHtml='';
     if(g.raten&&g.raten.length){
-      ratenHtml='<div style="font-size:10px;color:var(--ink-hint);margin-top:4px;">Raten: '+g.raten.map(function(r,i){return '<span style="margin-right:4px;">'+(i+1)+'. '+fmt(r)+'</span>';}).join('')+'</div>';
+      ratenHtml='<div style="font-size:10px;color:var(--ink-hint);margin-top:5px;display:-webkit-box;display:flex;flex-wrap:wrap;gap:4px;">'
+        +g.raten.map(function(r,i){
+          var amt=typeof r==='object'?r.amt:r;
+          var date=typeof r==='object'?r.date:null;
+          var dateStr=date?new Date(date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
+          return '<span style="background:var(--surface4);border-radius:4px;padding:2px 6px;">Rate '+(i+1)+': '+fmt(amt)+(dateStr?' · '+dateStr:'')+'</span>';
+        }).join('')
+      +'</div>';
     }
     moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' paid</span><span>'+fmt(t)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div>'+ratenHtml+'</div>';
     if(!g.done)payRow='<div class="pay-row"><input class="pay-input" type="number" id="pay-'+g.id+'" placeholder="Amount (€)" min="0" step="0.01" /><button class="pay-btn" onclick="addPayment(\''+g.id+'\')">Pay ✦</button></div>';
@@ -1075,9 +1082,21 @@ function buildRatenInputs(sfx){
   var container=document.getElementById('raten-inputs-'+sfx);
   if(!container)return;
   if(count<1||count>24){container.innerHTML='';return;}
+  // preserve existing values when rebuilding
+  var oldAmts=[],oldDates=[];
+  for(var j=1;j<=count;j++){
+    var oa=document.getElementById('raten-amt-'+sfx+'-'+j);
+    var od=document.getElementById('raten-date-'+sfx+'-'+j);
+    oldAmts.push(oa?oa.value:'');
+    oldDates.push(od?od.value:'');
+  }
   var rows='';
   for(var i=1;i<=count;i++){
-    rows+='<div class="raten-input-row"><label>Rate '+i+'</label><input type="number" id="raten-amt-'+sfx+'-'+i+'" placeholder="€" min="0" step="0.01" oninput="updateRatenTotal(\''+sfx+'\')" /></div>';
+    rows+='<div class="raten-input-row">'
+      +'<label>Rate '+i+'</label>'
+      +'<input type="number" id="raten-amt-'+sfx+'-'+i+'" placeholder="€" min="0" step="0.01" value="'+(oldAmts[i-1]||'')+'" oninput="updateRatenTotal(\''+sfx+'\')" />'
+      +'<input type="date" id="raten-date-'+sfx+'-'+i+'" value="'+(oldDates[i-1]||'')+'" title="Zahlungsdatum Rate '+i+'" style="color-scheme:dark;font-family:\'Crimson Pro\',Georgia,serif;font-size:13px;padding:6px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rad);color:var(--ink);-webkit-appearance:none;outline:none;width:140px;" />'
+    +'</div>';
   }
   container.innerHTML=rows;
   updateRatenTotal(sfx);
@@ -1109,8 +1128,10 @@ function getRatenTotal(sfx){
   var total=0;
   for(var i=1;i<=count;i++){
     var inp=document.getElementById('raten-amt-'+sfx+'-'+i);
+    var dateInp=document.getElementById('raten-date-'+sfx+'-'+i);
     var amt=parseFloat(inp?inp.value:0)||0;
-    raten.push(amt);
+    var date=dateInp?dateInp.value||null:null;
+    raten.push({amt:amt,date:date});
     total+=amt;
   }
   return{total:parseFloat(total.toFixed(2)),raten:raten};
@@ -1186,6 +1207,32 @@ function openEdit(id){
   document.getElementById('edit-money-total').value=g.moneyTotal||'';
   document.getElementById('edit-money-paid').value=g.moneyPaid||'';
   document.getElementById('edit-expiry').value=expiryForInput(g.expiry);
+  // restore Raten if present
+  var useRatenChk=document.getElementById('edit-use-raten');
+  var ratenFields=document.getElementById('raten-fields-edit');
+  if(g.raten&&g.raten.length&&useRatenChk){
+    useRatenChk.checked=true;
+    if(ratenFields)ratenFields.classList.add('visible');
+    var countEl=document.getElementById('goal-raten-count-edit');
+    if(countEl){countEl.value=g.raten.length;buildRatenInputs('edit');}
+    // fill in saved amounts and dates
+    setTimeout(function(){
+      g.raten.forEach(function(r,i){
+        var amtEl=document.getElementById('raten-amt-edit-'+(i+1));
+        var dateEl=document.getElementById('raten-date-edit-'+(i+1));
+        if(amtEl)amtEl.value=typeof r==='object'?r.amt:r;
+        if(dateEl)dateEl.value=typeof r==='object'?(r.date||''):'';
+      });
+      updateRatenTotal('edit');
+    },60);
+  } else {
+    if(useRatenChk)useRatenChk.checked=false;
+    if(ratenFields)ratenFields.classList.remove('visible');
+    var cEl=document.getElementById('goal-raten-count-edit');
+    if(cEl)cEl.value='';
+    var rCont=document.getElementById('raten-inputs-edit');
+    if(rCont)rCont.innerHTML='';
+  }
   toggleEditMoneyFields();
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(function(){document.getElementById('edit-title').focus();},60);
@@ -1502,16 +1549,21 @@ function runCalFilter(){
   var to=new Date(toVal);
   to.setHours(23,59,59,999);
 
-  // Only unfinished money quests whose expiry falls in range
-  // Show only the REMAINING balance (moneyTotal - moneyPaid), skipping fully paid ones
+  // Unfinished money quests: either expiry in range OR has a Rate with date in range
   var matches=state.goals.filter(function(g){
     if(g.type!=='money'||g.done)return false;
     if(!includeLocked&&isGoalEffectiveLocked(g))return false;
+    // Has Raten with per-date entries in range?
+    if(g.raten&&g.raten.length&&g.raten.some(function(r){
+      if(typeof r!=='object'||!r.date)return false;
+      var rd=new Date(r.date);rd.setHours(12,0,0,0);return rd>=from&&rd<=to;
+    }))return true;
+    // Normal expiry in range
     if(!g.expiry)return false;
     var d=new Date(g.expiry);d.setHours(12,0,0,0);
     return d>=from&&d<=to;
   });
-  matches.sort(function(a,b){return new Date(a.expiry)-new Date(b.expiry);});
+  matches.sort(function(a,b){return new Date(a.expiry||'9999-12-31')-new Date(b.expiry||'9999-12-31');});
 
   // Only keep quests that still have something left to pay
   var withBalance=matches.filter(function(g){
@@ -1541,20 +1593,50 @@ function runCalFilter(){
     return;
   }
 
-  // Build quest rows — only show "noch offen" (remaining)
+  // Build quest rows — for Raten quests, show each unpaid Rate on its own date
   var html=withBalance.map(function(g){
     var amt=parseFloat(g.moneyTotal)||0;
     var paid=parseFloat(g.moneyPaid)||0;
     var left=amt-paid;
     var proj=g.projectId?state.projects.find(function(p){return p.id===g.projectId;}):null;
-    var dateStr=new Date(g.expiry).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
     var lockedNote=isGoalEffectiveLocked(g)?'<span style="font-size:10px;color:var(--purple);"> 🔒</span>':'';
-    var ratenNote=g.raten&&g.raten.length?'<div style="font-size:10px;color:var(--ink-hint);margin-top:2px;">Raten: '+g.raten.map(function(r){return fmt(r);}).join(' + ')+'</div>':'';
+    var projNote=proj?'<span style="font-size:10px;color:var(--ink-hint);"> 📁'+esc(proj.name)+'</span>':'';
+
+    // If quest has Raten with dates, show each Rate as a separate row (filtered to range)
+    if(g.raten&&g.raten.length&&g.raten.some(function(r){return typeof r==='object'&&r.date;})){
+      var paidSoFar=parseFloat(g.moneyPaid)||0;
+      var ratenRows='';
+      g.raten.forEach(function(r,i){
+        var rAmt=typeof r==='object'?r.amt:r;
+        var rDate=typeof r==='object'?r.date:null;
+        // skip already covered by paid amount (deduct paid from earliest Raten first)
+        if(paidSoFar>=rAmt){paidSoFar-=rAmt;return;}
+        var rLeft=rAmt-paidSoFar;paidSoFar=0;
+        // check if this Rate's date falls in range
+        if(rDate){
+          var rd=new Date(rDate);rd.setHours(12,0,0,0);
+          if(rd<from||rd>to)return;
+        }
+        var dateStr=rDate?new Date(rDate).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'kein Datum';
+        ratenRows+='<div class="cal-result-card" style="margin-left:12px;border-left:3px solid var(--green-dim);">'
+          +'<div class="cal-result-left">'
+            +'<div class="cal-result-name" style="font-size:13px;">'+esc(g.title)+' – Rate '+(i+1)+projNote+lockedNote+'</div>'
+            +'<div class="cal-result-date">⏳ Fällig: '+dateStr+'</div>'
+          +'</div>'
+          +'<div class="cal-result-right">'
+            +'<div class="cal-result-amt">'+fmt(rLeft)+' noch offen</div>'
+          +'</div>'
+        +'</div>';
+      });
+      return ratenRows;
+    }
+
+    // Normal quest (no per-Rate dates) — show as single row using expiry
+    var dateStr=g.expiry?new Date(g.expiry).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
     return '<div class="cal-result-card">'
       +'<div class="cal-result-left">'
-        +'<div class="cal-result-name">'+esc(g.title)+lockedNote+(proj?' <span style="font-size:10px;color:var(--ink-hint);">📁 '+esc(proj.name)+'</span>':'')+'</div>'
-        +'<div class="cal-result-date">⏳ Fällig: '+dateStr+'</div>'
-        +ratenNote
+        +'<div class="cal-result-name">'+esc(g.title)+lockedNote+projNote+'</div>'
+        +(dateStr?'<div class="cal-result-date">⏳ Fällig: '+dateStr+'</div>':'')
       +'</div>'
       +'<div class="cal-result-right">'
         +'<div class="cal-result-amt">'+fmt(left)+' noch offen</div>'
