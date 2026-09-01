@@ -622,7 +622,7 @@
       </div>
       <div class="filter-row" style="margin-top:10px;margin-bottom:0;">
         <label class="chk-label"><input type="checkbox" id="cal-include-locked" /> Gesperrte einschließen</label>
-        <label class="chk-label"><input type="checkbox" id="cal-include-monthly" checked /> Monatliche Ausgaben einschließen</label>
+        <label class="chk-label"><input type="checkbox" id="cal-include-monthly" /> Monatliche Ausgaben einschließen</label>
       </div>
       <div class="cal-results" id="cal-results"></div>
     </div>
@@ -1570,10 +1570,32 @@ function runCalFilter(){
     return ((parseFloat(g.moneyTotal)||0)-(parseFloat(g.moneyPaid)||0))>0;
   });
 
-  // Total still owed from quests
-  var questLeft=withBalance.reduce(function(s,g){
-    return s+((parseFloat(g.moneyTotal)||0)-(parseFloat(g.moneyPaid)||0));
-  },0);
+  // Total still owed — only from quests actually displayed (respects locked filter)
+  // For Raten quests, only sum the Rates that fall within the date range
+  var questLeft=0;
+  withBalance.forEach(function(g){
+    var amt=parseFloat(g.moneyTotal)||0;
+    var paid=parseFloat(g.moneyPaid)||0;
+
+    if(g.raten&&g.raten.length&&g.raten.some(function(r){return typeof r==='object'&&r.date;})){
+      // Sum only the Rates whose date falls in range, minus already-paid portion
+      var paidSoFar=paid;
+      g.raten.forEach(function(r){
+        var rAmt=typeof r==='object'?r.amt:r;
+        var rDate=typeof r==='object'?r.date:null;
+        if(paidSoFar>=rAmt){paidSoFar-=rAmt;return;}
+        var rLeft=rAmt-paidSoFar;paidSoFar=0;
+        if(rDate){
+          var rd=new Date(rDate);rd.setHours(12,0,0,0);
+          if(rd<from||rd>to)return;
+        }
+        questLeft+=rLeft;
+      });
+    } else {
+      // Normal quest — add full remaining balance
+      questLeft+=(amt-paid);
+    }
+  });
 
   // Monatliche Ausgaben: calculate how many full months fall in range, show as single entity
   var expTotal=0;
