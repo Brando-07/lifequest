@@ -335,10 +335,60 @@
   /* Toast */
   .toast{position:fixed;bottom:28px;left:50%;-webkit-transform:translateX(-50%) translateY(80px);transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--gold-dim);border-radius:var(--rad-lg);padding:11px 24px;font-family:'Cinzel',Georgia,serif;font-size:13px;color:var(--gold);box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:999;-webkit-transition:-webkit-transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;transition:transform 0.35s cubic-bezier(.4,2,.5,1),opacity 0.3s;opacity:0;white-space:nowrap;pointer-events:none;}
   .toast.show{-webkit-transform:translateX(-50%) translateY(0);transform:translateX(-50%) translateY(0);opacity:1;}
+
+  /* ── PIN SCREEN ── */
+  #pw-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--surface);z-index:9999;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;flex-direction:column;}
+  .pw-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rad-lg);padding:2.5rem 2rem;width:90%;max-width:320px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);}
+  .pw-icon{font-size:44px;display:block;margin-bottom:1rem;}
+  .pw-title{font-family:'Cinzel',Georgia,serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:0.06em;margin-bottom:6px;}
+  .pw-sub{font-size:13px;color:var(--ink-hint);font-style:italic;margin-bottom:1.5rem;}
+  .pw-dots{display:-webkit-box;display:flex;-webkit-box-pack:center;justify-content:center;gap:14px;margin-bottom:1.5rem;}
+  .pw-dot{width:13px;height:13px;border-radius:50%;background:var(--surface4);border:1.5px solid var(--border2);-webkit-transition:all 0.2s;transition:all 0.2s;}
+  .pw-dot.filled{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px rgba(212,160,23,0.5);}
+  .pw-dot.error{background:var(--red);border-color:var(--red);}
+  .pw-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:210px;margin:0 auto;}
+  .pw-key{font-family:'Cinzel',Georgia,serif;font-size:20px;font-weight:600;color:var(--ink);background:var(--surface3);border:1px solid var(--border);border-radius:var(--rad);padding:14px;cursor:pointer;-webkit-appearance:none;-webkit-transition:all 0.15s;transition:all 0.15s;-webkit-user-select:none;user-select:none;}
+  .pw-key:hover{background:var(--surface4);color:var(--gold);}
+  .pw-key:active{-webkit-transform:scale(0.91);transform:scale(0.91);}
+  .pw-key.del{font-size:16px;color:var(--ink-hint);}
+  .pw-error{font-family:'Cinzel',Georgia,serif;font-size:11px;color:var(--red);letter-spacing:0.06em;margin-top:1rem;height:16px;}
+  @-webkit-keyframes pwshake{0%,100%{-webkit-transform:translateX(0);}20%{-webkit-transform:translateX(-8px);}40%{-webkit-transform:translateX(8px);}60%{-webkit-transform:translateX(-5px);}80%{-webkit-transform:translateX(5px);}}
+  @keyframes pwshake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+  .pw-dots.shake{-webkit-animation:pwshake 0.4s ease;animation:pwshake 0.4s ease;}
 </style>
 </head>
 <body>
-<div class="page">
+
+<!-- PIN SCREEN -->
+<div id="pw-screen">
+  <div class="pw-box">
+    <span class="pw-icon">♠</span>
+    <div class="pw-title">Questa</div>
+    <div class="pw-sub">PIN eingeben</div>
+    <div class="pw-dots" id="pw-dots">
+      <div class="pw-dot" id="pd0"></div>
+      <div class="pw-dot" id="pd1"></div>
+      <div class="pw-dot" id="pd2"></div>
+      <div class="pw-dot" id="pd3"></div>
+    </div>
+    <div class="pw-keypad">
+      <button class="pw-key" onclick="pwKey('1')">1</button>
+      <button class="pw-key" onclick="pwKey('2')">2</button>
+      <button class="pw-key" onclick="pwKey('3')">3</button>
+      <button class="pw-key" onclick="pwKey('4')">4</button>
+      <button class="pw-key" onclick="pwKey('5')">5</button>
+      <button class="pw-key" onclick="pwKey('6')">6</button>
+      <button class="pw-key" onclick="pwKey('7')">7</button>
+      <button class="pw-key" onclick="pwKey('8')">8</button>
+      <button class="pw-key" onclick="pwKey('9')">9</button>
+      <button class="pw-key" onclick="pwKey('0')" style="grid-column:2;">0</button>
+      <button class="pw-key del" onclick="pwDel()">⌫</button>
+    </div>
+    <div class="pw-error" id="pw-error"></div>
+  </div>
+</div>
+
+<div class="page" id="main-page" style="display:none;">
 
   <!-- Header -->
   <div class="header">
@@ -417,6 +467,7 @@
       <label class="chk-label"><input type="checkbox" id="chk-group-all" onchange="renderGoals('all')" /> Group by project</label>
       <label class="chk-label"><input type="checkbox" id="chk-hide-locked-all" onchange="renderGoals('all')" /> Hide locked</label>
       <label class="chk-label"><input type="checkbox" id="chk-only-locked-all" onchange="renderGoals('all')" /> Only locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-done-all" onchange="renderGoals('all')" /> Hide done</label>
     </div>
     <div class="form-panel" id="goal-form-all">
       <div class="form-panel-title">New Quest</div>
@@ -473,6 +524,7 @@
       <label class="chk-label"><input type="checkbox" id="chk-group-normal" onchange="renderGoals('normal')" /> Group by project</label>
       <label class="chk-label"><input type="checkbox" id="chk-hide-locked-normal" onchange="renderGoals('normal')" /> Hide locked</label>
       <label class="chk-label"><input type="checkbox" id="chk-only-locked-normal" onchange="renderGoals('normal')" /> Only locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-done-normal" onchange="renderGoals('normal')" /> Hide done</label>
     </div>
     <div class="form-panel" id="goal-form-normal">
       <div class="form-panel-title">New Normal Quest</div>
@@ -529,6 +581,7 @@
       <label class="chk-label"><input type="checkbox" id="chk-group-money" onchange="renderGoals('money')" /> Group by project</label>
       <label class="chk-label"><input type="checkbox" id="chk-hide-locked-money" onchange="renderGoals('money')" /> Hide locked</label>
       <label class="chk-label"><input type="checkbox" id="chk-only-locked-money" onchange="renderGoals('money')" /> Only locked</label>
+      <label class="chk-label"><input type="checkbox" id="chk-hide-done-money" onchange="renderGoals('money')" /> Hide done</label>
     </div>
     <div class="form-panel" id="goal-form-money">
       <div class="form-panel-title">New Money Quest</div>
@@ -931,10 +984,12 @@ function applyFiltersAndSort(gs,tab){
   var sfx=tab==='all'?'all':tab;
   var hideLocked=document.getElementById('chk-hide-locked-'+sfx).checked;
   var onlyLocked=document.getElementById('chk-only-locked-'+sfx).checked;
+  var hideDone=document.getElementById('chk-hide-done-'+sfx)&&document.getElementById('chk-hide-done-'+sfx).checked;
   gs=gs.filter(function(g){
     var locked=isGoalEffectiveLocked(g);
     if(hideLocked&&locked)return false;
     if(onlyLocked&&!locked)return false;
+    if(hideDone&&g.done)return false;
     return true;
   });
   var mode=document.getElementById('sort-select-'+sfx).value;
@@ -1428,11 +1483,11 @@ function renderStats(){
   var expiring=activeGoals.filter(function(g){return !g.done&&g.expiry&&daysUntil(g.expiry)<=7&&daysUntil(g.expiry)>=0;}).length;
   var lockedCount=state.goals.filter(function(g){return isGoalEffectiveLocked(g);}).length+state.projects.filter(isLocked).length;
   var projXPAvail=activeProjects.filter(function(p){return p.xpReward&&!p.completedXPGranted;}).reduce(function(s,p){return s+(p.xpReward||0);},0);
-  document.getElementById('bigPct').textContent=pct;
+  document.getElementById('bigPct').textContent=pct.toString().replace('.',',');
   document.getElementById('bigPctSub').textContent=done+' of '+total+' quests completed';
   document.getElementById('overview-tiles').innerHTML=
-    tile(pct+'%','Completion rate',done+' done, '+(total-done)+' remaining',pctClass(pct))+
-    tile(xpPct+'%','XP earned',xp+' of '+maxXP+' possible XP',pctClass(xpPct))+
+    tile(pct.toString().replace('.',',')+'%','Completion rate',done+' done, '+(total-done)+' remaining',pctClass(pct))+
+    tile(xpPct.toString().replace('.',',')+'%','XP earned',xp+' of '+maxXP+' possible XP',pctClass(xpPct))+
     tile(LEVELS[lv],'Current rank','Level '+(lv+1)+' of '+LEVELS.length,'')+
     (mGoals.length?tile(fmt(tp),'Money paid',fmt(tp)+' of '+fmt(tt)+' total',pctClass(tt?Math.round(tp/tt*100):0)):'')+
     (expiring?tile(expiring,'Expiring soon','quests due within 7 days','c-red'):'')+
@@ -1444,12 +1499,12 @@ function renderStats(){
     var xpBadge=p.xpReward?'<span style="font-family:\'Cinzel\',serif;font-size:10px;color:var(--gold);margin-left:6px;">🏆 +'+p.xpReward+' XP</span>':'';
     var mCost=pg.filter(function(g){return g.type==='money';}).reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
     var mCostStr=mCost>0?'<span style="font-size:12px;color:var(--green);margin-left:6px;">💰 '+fmt(mCost)+'</span>':'';
-    return '<div class="proj-stat-row"><div class="proj-stat-header"><div class="proj-stat-name">'+(p.icon||'🗺')+' '+esc(p.name)+xpBadge+mCostStr+(cdBadge?' '+cdBadge:'')+'</div><div class="proj-stat-pct '+pctClass(ppct)+'">'+ppct+'%</div></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div><div style="font-size:12px;color:var(--ink-hint);margin-top:6px;font-style:italic;">'+pd+' of '+pg.length+' quests completed</div></div>';
+    return '<div class="proj-stat-row"><div class="proj-stat-header"><div class="proj-stat-name">'+(p.icon||'🗺')+' '+esc(p.name)+xpBadge+mCostStr+(cdBadge?' '+cdBadge:'')+'</div><div class="proj-stat-pct '+pctClass(ppct)+'">'+ppct.toString().replace('.',',')+'%</div></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div><div style="font-size:12px;color:var(--ink-hint);margin-top:6px;font-style:italic;">'+pd+' of '+pg.length+' quests completed</div></div>';
   }).join(''):'<div class="empty" style="padding:1rem 0;font-size:14px;">No active projects.</div>';
   document.getElementById('project-stat-rows').innerHTML=projHtml;
   document.getElementById('cat-stat-tiles').innerHTML=CATS.map(function(cat){
     var cg=activeGoals.filter(function(g){return g.cat===cat;}),cd=cg.filter(function(g){return g.done;}).length,cpct=cg.length?Math.round(cd/cg.length*100):null;
-    return '<div class="cat-tile"><div class="cat-tile-pct '+(cpct!==null?pctClass(cpct):'')+'">'+(cpct!==null?cpct+'%':'—')+'</div><div><div class="cat-tile-name">'+cat+'</div><div class="cat-tile-count">'+cd+' / '+cg.length+'</div></div></div>';
+    return '<div class="cat-tile"><div class="cat-tile-pct '+(cpct!==null?pctClass(cpct):'')+'">'+(cpct!==null?cpct.toString().replace('.',',')+'%':'—')+'</div><div><div class="cat-tile-name">'+cat+'</div><div class="cat-tile-count">'+cd+' / '+cg.length+'</div></div></div>';
   }).join('');
 }
 
@@ -1689,8 +1744,45 @@ function runCalFilter(){
   container.innerHTML=html;
 }
 
+/* ════════ PIN LOCK ════════ */
+var PW_CORRECT='1195';
+var pwEntry='';
+function pwKey(d){
+  if(pwEntry.length>=4)return;
+  pwEntry+=d;
+  updatePwDots();
+  if(pwEntry.length===4)setTimeout(checkPin,120);
+}
+function pwDel(){pwEntry=pwEntry.slice(0,-1);updatePwDots();}
+function updatePwDots(){
+  for(var i=0;i<4;i++){var dot=document.getElementById('pd'+i);if(dot)dot.className='pw-dot'+(i<pwEntry.length?' filled':'');}
+}
+function checkPin(){
+  if(pwEntry===PW_CORRECT){
+    document.getElementById('pw-screen').style.display='none';
+    document.getElementById('main-page').style.display='block';
+  } else {
+    pwEntry='';
+    var dots=document.getElementById('pw-dots');
+    for(var i=0;i<4;i++){var d=document.getElementById('pd'+i);if(d)d.className='pw-dot error';}
+    dots.classList.add('shake');
+    document.getElementById('pw-error').textContent='Falscher PIN. Nochmal versuchen.';
+    setTimeout(function(){
+      dots.classList.remove('shake');
+      for(var i=0;i<4;i++){var d=document.getElementById('pd'+i);if(d)d.className='pw-dot';}
+      document.getElementById('pw-error').textContent='';
+    },800);
+  }
+}
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('pw-screen').style.display==='none')return;
+  if(e.key>='0'&&e.key<='9')pwKey(e.key);
+  if(e.key==='Backspace')pwDel();
+});
+
 renderAll();
 updateBackupStatus();
 </script>
+</div><!-- /main-page -->
 </body>
 </html>
