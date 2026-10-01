@@ -963,7 +963,7 @@ function updateMoneyCircle(suffix){
   document.getElementById('circFill'+id).style.strokeDashoffset=CIRC_C-(CIRC_C*pct/100);
   document.getElementById('circPaid'+id).textContent=fmt(tp);
   document.getElementById('circTotal'+id).textContent=fmt(tt);
-  document.getElementById('circPct'+id).textContent=pct+'%';
+  document.getElementById('circPct'+id).textContent=pct.toString().replace('.',',')+'%';
   var detHtml='';
   mGoals.forEach(function(g){
     var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
@@ -1014,25 +1014,49 @@ function questCardHTML(g){
   var isMoney=g.type==='money';
   var eLocked=isGoalEffectiveLocked(g);
   var selfLocked=isLocked(g);
-  // cascade lock: if project is locked, the quest is shown locked even if not self-locked
   var projLocked=g.projectId?(function(){var p=state.projects.find(function(x){return x.id===g.projectId;});return p&&isLocked(p);}()):false;
-  var moneyBar='',payRow='';
+  var moneyBar='',payRow='',ratenPanel='';
+
   if(isMoney&&!eLocked){
     var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
-    var ratenHtml='';
+
+    // If quest has Raten — show expandable mini-quest panel instead of pay input
     if(g.raten&&g.raten.length){
-      ratenHtml='<div style="font-size:10px;color:var(--ink-hint);margin-top:5px;display:-webkit-box;display:flex;flex-wrap:wrap;gap:4px;">'
-        +g.raten.map(function(r,i){
-          var amt=typeof r==='object'?r.amt:r;
-          var date=typeof r==='object'?r.date:null;
-          var dateStr=date?new Date(date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
-          return '<span style="background:var(--surface4);border-radius:4px;padding:2px 6px;">Rate '+(i+1)+': '+fmt(amt)+(dateStr?' · '+dateStr:'')+'</span>';
-        }).join('')
+      var paidCount=g.raten.filter(function(r){return r.paid;}).length;
+      var ratenItems=g.raten.map(function(r,i){
+        var amt=typeof r==='object'?r.amt:r;
+        var date=typeof r==='object'?r.date:null;
+        var paid=typeof r==='object'?r.paid:false;
+        var dateStr=date?new Date(date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'Kein Datum';
+        return '<div style="display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;gap:10px;padding:8px 10px;background:'+(paid?'rgba(77,191,127,0.06)':'var(--surface)')+'  ;border:1px solid '+(paid?'rgba(77,191,127,0.2)':'var(--border)')+'  ;border-radius:8px;margin-bottom:6px;">'
+          +'<button onclick="toggleRate(\''+g.id+'\','+i+')" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:1.5px solid '+(paid?'var(--green)':'var(--border2)')+'  ;background:'+(paid?'var(--green)':'none')+'  ;cursor:pointer;-webkit-appearance:none;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;font-size:11px;color:#0F0E0A;font-weight:700;-webkit-transition:all 0.2s;transition:all 0.2s;">'+(paid?'✓':'')+'</button>'
+          +'<div style="flex:1;">'
+            +'<div style="font-family:\'Cinzel\',Georgia,serif;font-size:11px;color:'+(paid?'var(--ink-hint)':'var(--ink)')+'  ;'+(paid?'text-decoration:line-through;':'')+'">Rate '+(i+1)+'</div>'
+            +'<div style="font-size:10px;color:var(--ink-hint);margin-top:1px;">📅 '+dateStr+'</div>'
+          +'</div>'
+          +'<div style="font-family:\'Cinzel\',Georgia,serif;font-size:13px;font-weight:600;color:'+(paid?'var(--green)':'var(--ink-soft)')+'  ;">'+fmt(amt)+'</div>'
+        +'</div>';
+      }).join('');
+
+      ratenPanel='<div style="margin-top:10px;">'
+        +'<button onclick="toggleRatenPanel(\'raten-'+g.id+'\')" style="font-family:\'Cinzel\',Georgia,serif;font-size:10px;font-weight:600;color:var(--gold);background:none;border:1px solid var(--gold-dim);border-radius:6px;padding:5px 12px;cursor:pointer;-webkit-appearance:none;letter-spacing:0.04em;">📋 Raten anzeigen ('+paidCount+'/'+g.raten.length+' bezahlt)</button>'
+        +'<div id="raten-'+g.id+'" style="display:none;margin-top:8px;">'+ratenItems+'</div>'
       +'</div>';
+      moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' bezahlt</span><span>'+fmt(t)+' gesamt</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div></div>';
+      // No free-form pay input for Raten quests — use the Rate checkboxes
+      payRow='';
+    } else {
+      // Normal money quest — show pay input
+      moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' bezahlt</span><span>'+fmt(t)+' gesamt</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div></div>';
+      if(!g.done){
+        payRow='<div class="pay-row">'
+          +'<input class="pay-input" type="number" id="pay-'+g.id+'" placeholder="Betrag (€)" min="0.01" step="0.01" />'
+          +'<button class="pay-btn" onclick="addPayment(\''+g.id+'\')">Pay ✦</button>'
+        +'</div>';
+      }
     }
-    moneyBar='<div class="goal-money-bar-wrap"><div class="goal-money-labels"><span>'+fmt(p)+' paid</span><span>'+fmt(t)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+gp+'%"></div></div>'+ratenHtml+'</div>';
-    if(!g.done)payRow='<div class="pay-row"><input class="pay-input" type="number" id="pay-'+g.id+'" placeholder="Amount (€)" min="0" step="0.01" /><button class="pay-btn" onclick="addPayment(\''+g.id+'\')">Pay ✦</button></div>';
   }
+
   var expClass=g.done||eLocked?'':cardExpiryClass(g.expiry);
   var cdBadge=g.done||eLocked?'':countdownBadge(g.expiry);
   var lkBadge=eLocked?lockBadge(projLocked?proj:g,true):'';
@@ -1048,10 +1072,11 @@ function questCardHTML(g){
           +'<span class="diff-stars">'+DIFF_STARS[g.diff]+'</span>'
           +'<span class="xp-badge">+'+XP_MAP[g.diff]+' XP</span>'
           +(isMoney?'<span class="money-badge">'+fmt(g.moneyTotal||0)+'</span>':'')
+          +(g.raten&&g.raten.length?'<span class="monthly-badge">📋 '+g.raten.length+' Raten</span>':'')
           +(proj?'<span class="proj-badge">📁 '+esc(proj.icon||'🗺')+' '+esc(proj.name)+'</span>':'')
           +cdBadge+lkBadge+cascadeNote
         +'</div>'
-        +moneyBar+payRow
+        +moneyBar+payRow+ratenPanel
       +'</div>'
       +'<div class="goal-actions">'
         +(projLocked?'':'<button class="icon-btn'+(selfLocked?' lock-active':'')+'" onclick="handleLockGoal(\''+g.id+'\')" title="'+(selfLocked?'Unlock':'Lock')+'">'+(selfLocked?'🔒':'🔓')+'</button>')
@@ -1060,6 +1085,11 @@ function questCardHTML(g){
       +'</div>'
     +'</div>'
   +'</div>';
+}
+
+function toggleRatenPanel(id){
+  var el=document.getElementById(id);
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
 }
 
 /* ── Render goals for a given tab ── */
@@ -1096,13 +1126,34 @@ function renderAllGoalTabs(){
 
 /* ── Payments ── */
 function addPayment(id){
-  var inp=document.getElementById('pay-'+id),amount=parseFloat(inp?inp.value:0);
-  if(isNaN(amount)||amount<=0){if(inp)inp.focus();return;}
+  var inp=document.getElementById('pay-'+id);
+  var amount=parseFloat(inp?inp.value:0);
+  if(isNaN(amount)||amount<=0){if(inp)inp.focus();showToast('⚠ Bitte einen Betrag eingeben.');return;}
   var g=state.goals.find(function(x){return x.id===id;});if(!g)return;
   g.moneyPaid=(parseFloat(g.moneyPaid)||0)+amount;
-  if(g.moneyTotal&&g.moneyPaid>=parseFloat(g.moneyTotal)){g.done=true;showToast('💰 Fully paid! Quest complete!');}
-  else showToast('💰 Payment recorded: '+fmt(amount));
+  if(g.moneyTotal&&g.moneyPaid>=parseFloat(g.moneyTotal)){
+    g.moneyPaid=parseFloat(g.moneyTotal);
+    g.done=true;
+    saveState();renderAll();
+    showToast('💰 Vollständig bezahlt! Quest erledigt!');
+  } else {
+    saveState();renderAll();
+    showToast('💰 Zahlung gespeichert: '+fmt(amount));
+  }
+}
+
+/* ── Toggle single Rate as paid ── */
+function toggleRate(goalId,rateIdx){
+  var g=state.goals.find(function(x){return x.id===goalId;});if(!g||!g.raten)return;
+  var r=g.raten[rateIdx];if(!r)return;
+  r.paid=!r.paid;
+  // Recalculate moneyPaid from all paid Raten
+  var totalPaid=g.raten.reduce(function(s,rate){return s+(rate.paid?(typeof rate==='object'?rate.amt:rate):0);},0);
+  g.moneyPaid=parseFloat(totalPaid.toFixed(2));
+  if(g.moneyPaid>=(parseFloat(g.moneyTotal)||0)){g.done=true;}
+  else{g.done=false;}
   saveState();renderAll();
+  showToast(r.paid?'✓ Rate '+(rateIdx+1)+' bezahlt!':'↩ Rate '+(rateIdx+1)+' zurückgesetzt');
 }
 
 function toggleGoal(id){
@@ -1452,7 +1503,7 @@ function renderProjects(){
           +'<div class="project-name">'+esc(p.name)+'</div>'
           +(p.desc?'<div class="project-desc">'+esc(p.desc)+'</div>':'')
           +'<div class="project-meta">'+cdBadge+lkBadge+xpBadge+completedBadge+'</div>'
-          +'<div class="progress-wrap"><div class="progress-labels"><span>'+pd+'/'+pg.length+' quests</span><span>'+ppct+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>'
+          +'<div class="progress-wrap"><div class="progress-labels"><span>'+pd+'/'+pg.length+' quests</span><span>'+ppct.toString().replace('.',',')+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>'
           +moneyRow
         +'</div>'
         +'<div style="display:flex;gap:2px;flex-shrink:0;">'
