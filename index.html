@@ -805,9 +805,27 @@ var activeTab='all';
 var STORAGE_KEY='lq_github_v1';
 
 function loadState(){
-  try{var r=localStorage.getItem(STORAGE_KEY);if(r){var s=JSON.parse(r);if(s&&s.goals&&s.projects)return s;}}catch(e){}
-  // First run on GitHub: load the embedded backup data
-  return JSON.parse(JSON.stringify(EMBEDDED_DATA));
+  try{
+    var r=localStorage.getItem(STORAGE_KEY);
+    if(r){
+      var s=JSON.parse(r);
+      if(s&&s.goals&&s.projects){
+        // Migrate expenses from old separate key if not yet in state
+        if(!s.expenses){
+          try{var old=localStorage.getItem('questa_expenses');s.expenses=old?JSON.parse(old):[];}catch(e){s.expenses=[];}
+        }
+        if(!s.piggy){
+          try{var oldp=localStorage.getItem('questa_piggy');s.piggy=oldp?JSON.parse(oldp):{transactions:[],goal:null,goalName:''};}catch(e){s.piggy={transactions:[],goal:null,goalName:''};}
+        }
+        return s;
+      }
+    }
+  }catch(e){}
+  // First run: load embedded data
+  var base=JSON.parse(JSON.stringify(EMBEDDED_DATA));
+  if(!base.expenses)base.expenses=[];
+  if(!base.piggy)base.piggy={transactions:[],goal:null,goalName:''};
+  return base;
 }
 function saveState(){
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
@@ -841,8 +859,13 @@ function importData(evt){
     try{
       var imported=JSON.parse(e.target.result);
       if(!imported.goals||!imported.projects){showToast('⚠ Invalid backup file');return;}
-      state=imported;saveState();
+      if(!imported.expenses)imported.expenses=[];
+      if(!imported.piggy)imported.piggy={transactions:[],goal:null,goalName:''};
+      state=imported;
+      expenses=state.expenses;
+      saveState();
       renderAll();
+      renderExpenses();
       showToast('✦ Data imported successfully!');
     }catch(ex){showToast('⚠ Could not read file');}
   };
@@ -852,7 +875,7 @@ function importData(evt){
 
 /* ── Helpers ── */
 function getLevel(xp){var lv=0;for(var i=0;i<LEVEL_XP.length;i++){if(xp>=LEVEL_XP[i])lv=i;else break;}return lv;}
-function getLevelProgress(xp){var lv=getLevel(xp);if(lv>=LEVELS.length-1)return{pct:100,cur:xp,next:xp};var c=LEVEL_XP[lv],n=LEVEL_XP[lv+1];return{pct:Math.round((xp-c)/(n-c)*100),cur:xp-c,next:n-c};}
+function getLevelProgress(xp){var lv=getLevel(xp);if(lv>=LEVELS.length-1)return{pct:100,cur:xp,next:xp};var c=LEVEL_XP[lv],n=LEVEL_XP[lv+1];return{pct:calcPct(xp-c,n-c),cur:xp-c,next:n-c};}
 
 function isLocked(item){
   if(!item||!item.locked)return false;
@@ -881,6 +904,8 @@ function totalXP(){
 function pctClass(p){if(p>=70)return 'c-green';if(p>=35)return 'c-amber';return 'c-red';}
 function fmt(n){return '€'+(parseFloat(n)||0).toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:2});}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function calcPct(a,b){if(!b)return 0;return Math.min(100,parseFloat((a/b*100).toFixed(3)));}
+function fmtPct(n){return parseFloat(n).toFixed(3).replace('.',',')+'%';}
 
 function daysUntil(dateStr){
   if(!dateStr)return null;
@@ -958,15 +983,15 @@ function updateMoneyCircle(suffix){
   section.style.display='block';
   var tt=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
   var tp=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyPaid)||0);},0);
-  var pct=tt>0?Math.min(100,Math.round(tp/tt*100)):0;
+  var pct=tt>0?calcPct(tp,tt):0;
   var id=suffix?suffix:'';
   document.getElementById('circFill'+id).style.strokeDashoffset=CIRC_C-(CIRC_C*pct/100);
   document.getElementById('circPaid'+id).textContent=fmt(tp);
   document.getElementById('circTotal'+id).textContent=fmt(tt);
-  document.getElementById('circPct'+id).textContent=pct.toString().replace('.',',')+'%';
+  document.getElementById('circPct'+id).textContent=fmtPct(pct);
   var detHtml='';
   mGoals.forEach(function(g){
-    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
+    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=calcPct(p,t);
     detHtml+='<div class="money-detail-row"><span class="money-detail-label">'+esc(g.title)+'</span><span class="money-detail-val '+(gp>=100?'green':gp>0?'gold':'soft')+'">'+fmt(p)+' / '+fmt(t)+'</span></div>';
   });
   document.getElementById('money-details'+id).innerHTML=detHtml;
@@ -1018,7 +1043,7 @@ function questCardHTML(g){
   var moneyBar='',payRow='',ratenPanel='';
 
   if(isMoney&&!eLocked){
-    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=t>0?Math.min(100,Math.round(p/t*100)):0;
+    var t=parseFloat(g.moneyTotal)||0,p=parseFloat(g.moneyPaid)||0,gp=calcPct(p,t);
 
     // If quest has Raten — show expandable mini-quest panel instead of pay input
     if(g.raten&&g.raten.length){
@@ -1460,7 +1485,7 @@ function renderProjects(){
     var locked=isLocked(p);
     var pg=state.goals.filter(function(g){return g.projectId===p.id;});
     var pd=pg.filter(function(g){return g.done;}).length;
-    var ppct=pg.length?Math.round(pd/pg.length*100):0;
+    var ppct=pg.length?calcPct(pd,pg.length):0;
     var expClass=locked?'':cardExpiryClass(p.expiry);
     var cdBadge=locked?'':countdownBadge(p.expiry);
     var lkBadge=lockBadge(p,locked);
@@ -1479,7 +1504,7 @@ function renderProjects(){
         var gLocked=isGoalEffectiveLocked(g);
         var gIsMoney=g.type==='money';
         var gMoneyBar='';
-        if(gIsMoney){var gt=parseFloat(g.moneyTotal)||0,gp2=parseFloat(g.moneyPaid)||0,ggp=gt>0?Math.min(100,Math.round(gp2/gt*100)):0;gMoneyBar='<div class="goal-money-bar-wrap" style="margin-top:6px;"><div class="goal-money-labels"><span>'+fmt(gp2)+' paid</span><span>'+fmt(gt)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+ggp+'%"></div></div></div>';}
+        if(gIsMoney){var gt=parseFloat(g.moneyTotal)||0,gp2=parseFloat(g.moneyPaid)||0,ggp=calcPct(gp2,gt);gMoneyBar='<div class="goal-money-bar-wrap" style="margin-top:6px;"><div class="goal-money-labels"><span>'+fmt(gp2)+' paid</span><span>'+fmt(gt)+' total</span></div><div class="goal-money-track"><div class="goal-money-fill" style="width:'+ggp+'%"></div></div></div>';}
         return '<div class="pq-card'+(g.done?' done-pq':'')+(gLocked?' locked-pq':'')+'">'
           +'<div class="pq-title">'+(g.done?'✓ ':gLocked?'🔒 ':'')+esc(g.title)+'</div>'
           +(g.desc?'<div class="pq-desc">'+esc(g.desc)+'</div>':'')
@@ -1503,7 +1528,7 @@ function renderProjects(){
           +'<div class="project-name">'+esc(p.name)+'</div>'
           +(p.desc?'<div class="project-desc">'+esc(p.desc)+'</div>':'')
           +'<div class="project-meta">'+cdBadge+lkBadge+xpBadge+completedBadge+'</div>'
-          +'<div class="progress-wrap"><div class="progress-labels"><span>'+pd+'/'+pg.length+' quests</span><span>'+ppct.toString().replace('.',',')+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>'
+          +'<div class="progress-wrap"><div class="progress-labels"><span>'+pd+'/'+pg.length+' quests</span><span>'+fmtPct(ppct)+'</span></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div></div>'
           +moneyRow
         +'</div>'
         +'<div style="display:flex;gap:2px;flex-shrink:0;">'
@@ -1525,8 +1550,8 @@ function renderStats(){
   var includeLocked=document.getElementById('stats-include-locked')&&document.getElementById('stats-include-locked').checked;
   var activeGoals=state.goals.filter(function(g){return includeLocked||!isGoalEffectiveLocked(g);});
   var activeProjects=state.projects.filter(function(p){return includeLocked||!isLocked(p);});
-  var total=activeGoals.length,done=activeGoals.filter(function(g){return g.done;}).length,pct=total?Math.round(done/total*100):0;
-  var xp=totalXP(),maxXP=activeGoals.reduce(function(s,g){return s+XP_MAP[g.diff];},0),xpPct=maxXP?Math.round(xp/maxXP*100):0;
+  var total=activeGoals.length,done=activeGoals.filter(function(g){return g.done;}).length,pct=total?calcPct(done,total):0;
+  var xp=totalXP(),maxXP=activeGoals.reduce(function(s,g){return s+XP_MAP[g.diff];},0),xpPct=maxXP?calcPct(xp,maxXP):0;
   var lv=getLevel(xp);
   var mGoals=activeGoals.filter(function(g){return g.type==='money';});
   var tt=mGoals.reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
@@ -1534,28 +1559,28 @@ function renderStats(){
   var expiring=activeGoals.filter(function(g){return !g.done&&g.expiry&&daysUntil(g.expiry)<=7&&daysUntil(g.expiry)>=0;}).length;
   var lockedCount=state.goals.filter(function(g){return isGoalEffectiveLocked(g);}).length+state.projects.filter(isLocked).length;
   var projXPAvail=activeProjects.filter(function(p){return p.xpReward&&!p.completedXPGranted;}).reduce(function(s,p){return s+(p.xpReward||0);},0);
-  document.getElementById('bigPct').textContent=pct.toString().replace('.',',');
+  document.getElementById('bigPct').textContent=fmtPct(pct).replace('%','');
   document.getElementById('bigPctSub').textContent=done+' of '+total+' quests completed';
   document.getElementById('overview-tiles').innerHTML=
-    tile(pct.toString().replace('.',',')+'%','Completion rate',done+' done, '+(total-done)+' remaining',pctClass(pct))+
-    tile(xpPct.toString().replace('.',',')+'%','XP earned',xp+' of '+maxXP+' possible XP',pctClass(xpPct))+
+    tile(fmtPct(pct),'Completion rate',done+' done, '+(total-done)+' remaining',pctClass(pct))+
+    tile(fmtPct(xpPct),'XP earned',xp+' of '+maxXP+' possible XP',pctClass(xpPct))+
     tile(LEVELS[lv],'Current rank','Level '+(lv+1)+' of '+LEVELS.length,'')+
-    (mGoals.length?tile(fmt(tp),'Money paid',fmt(tp)+' of '+fmt(tt)+' total',pctClass(tt?Math.round(tp/tt*100):0)):'')+
+    (mGoals.length?tile(fmt(tp),'Money paid',fmt(tp)+' of '+fmt(tt)+' total',pctClass(tt?calcPct(tp,tt):0)):'')+
     (expiring?tile(expiring,'Expiring soon','quests due within 7 days','c-red'):'')+
     (lockedCount?tile(lockedCount,'Locked','quests & projects locked',''):'')+
     (projXPAvail?tile(projXPAvail,'Bonus XP available','complete projects to earn','c-amber'):'');
   var projHtml=activeProjects.length?activeProjects.map(function(p){
-    var pg=activeGoals.filter(function(g){return g.projectId===p.id;}),pd=pg.filter(function(g){return g.done;}).length,ppct=pg.length?Math.round(pd/pg.length*100):0;
+    var pg=activeGoals.filter(function(g){return g.projectId===p.id;}),pd=pg.filter(function(g){return g.done;}).length,ppct=pg.length?calcPct(pd,pg.length):0;
     var cdBadge=countdownBadge(p.expiry);
     var xpBadge=p.xpReward?'<span style="font-family:\'Cinzel\',serif;font-size:10px;color:var(--gold);margin-left:6px;">🏆 +'+p.xpReward+' XP</span>':'';
     var mCost=pg.filter(function(g){return g.type==='money';}).reduce(function(s,g){return s+(parseFloat(g.moneyTotal)||0);},0);
     var mCostStr=mCost>0?'<span style="font-size:12px;color:var(--green);margin-left:6px;">💰 '+fmt(mCost)+'</span>':'';
-    return '<div class="proj-stat-row"><div class="proj-stat-header"><div class="proj-stat-name">'+(p.icon||'🗺')+' '+esc(p.name)+xpBadge+mCostStr+(cdBadge?' '+cdBadge:'')+'</div><div class="proj-stat-pct '+pctClass(ppct)+'">'+ppct.toString().replace('.',',')+'%</div></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div><div style="font-size:12px;color:var(--ink-hint);margin-top:6px;font-style:italic;">'+pd+' of '+pg.length+' quests completed</div></div>';
+    return '<div class="proj-stat-row"><div class="proj-stat-header"><div class="proj-stat-name">'+(p.icon||'🗺')+' '+esc(p.name)+xpBadge+mCostStr+(cdBadge?' '+cdBadge:'')+'</div><div class="proj-stat-pct '+pctClass(ppct)+'">'+fmtPct(ppct)+'</div></div><div class="progress-track"><div class="progress-fill" style="width:'+ppct+'%"></div></div><div style="font-size:12px;color:var(--ink-hint);margin-top:6px;font-style:italic;">'+pd+' of '+pg.length+' quests completed</div></div>';
   }).join(''):'<div class="empty" style="padding:1rem 0;font-size:14px;">No active projects.</div>';
   document.getElementById('project-stat-rows').innerHTML=projHtml;
   document.getElementById('cat-stat-tiles').innerHTML=CATS.map(function(cat){
-    var cg=activeGoals.filter(function(g){return g.cat===cat;}),cd=cg.filter(function(g){return g.done;}).length,cpct=cg.length?Math.round(cd/cg.length*100):null;
-    return '<div class="cat-tile"><div class="cat-tile-pct '+(cpct!==null?pctClass(cpct):'')+'">'+(cpct!==null?cpct.toString().replace('.',',')+'%':'—')+'</div><div><div class="cat-tile-name">'+cat+'</div><div class="cat-tile-count">'+cd+' / '+cg.length+'</div></div></div>';
+    var cg=activeGoals.filter(function(g){return g.cat===cat;}),cd=cg.filter(function(g){return g.done;}).length,cpct=cg.length?calcPct(cd,cg.length):null;
+    return '<div class="cat-tile"><div class="cat-tile-pct '+(cpct!==null?pctClass(cpct):'')+'">'+(cpct!==null?fmtPct(cpct):'—')+'</div><div><div class="cat-tile-name">'+cat+'</div><div class="cat-tile-count">'+cd+' / '+cg.length+'</div></div></div>';
   }).join('');
 }
 
@@ -1583,11 +1608,9 @@ function showToast(msg){var t=document.getElementById('toast');t.textContent=msg
 /* Data loaded from EMBEDDED_DATA on first visit, then from localStorage on every visit after */
 
 /* ════════ MONTHLY FIXED EXPENSES ════════ */
-function loadExpenses(){
-  try{var r=localStorage.getItem('questa_expenses');if(r)return JSON.parse(r);}catch(e){}
-  return[];
-}
-function saveExpenses(list){try{localStorage.setItem('questa_expenses',JSON.stringify(list));}catch(e){}}
+/* ════════ MONATLICHE AUSGABEN — now stored inside state ════════ */
+function loadExpenses(){return state.expenses||(state.expenses=[]);}
+function saveExpenses(){state.expenses=expenses;saveState();}
 
 var expenses=loadExpenses();
 
@@ -1626,7 +1649,7 @@ function addExpense(){
   var cat=document.getElementById('exp-cat').value.trim();
   if(!name||isNaN(amt)||amt<=0){showToast('⚠ Bitte Name und Betrag eingeben.');return;}
   expenses.push({name:name,amt:amt,cat:cat});
-  saveExpenses(expenses);
+  saveExpenses();
   document.getElementById('exp-name').value='';
   document.getElementById('exp-amt').value='';
   document.getElementById('exp-cat').value='';
@@ -1636,7 +1659,7 @@ function addExpense(){
 
 function deleteExpense(i){
   expenses.splice(i,1);
-  saveExpenses(expenses);
+  saveExpenses();
   renderExpenses();
 }
 
